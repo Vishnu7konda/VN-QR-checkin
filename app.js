@@ -7,9 +7,10 @@
 
 // Coordinator Access Profiles
 const COORDINATORS = {
-  vishnu: { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin" },
-  nikhil: { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations" },
-  volunteer: { id: "volunteer", name: "Volunteer Desk", role: "Event Staff", avatar: "👤", badge: "Staff" }
+  vishnu: { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin", pin: "2026", isSuperAdmin: true },
+  nikhil: { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations", pin: "2026", isSuperAdmin: true },
+  volunteer_shark: { id: "volunteer_shark", name: "Shark Tank Staff", role: "Event Staff", avatar: "🦈", badge: "Shark Tank Only", pin: "1111", lockedEvent: "shark_tank", isSuperAdmin: false },
+  volunteer_techno: { id: "volunteer_techno", name: "Techno Splurge Staff", role: "Event Staff", avatar: "⚡", badge: "Techno Splurge Only", pin: "2222", lockedEvent: "techno_splurge", isSuperAdmin: false }
 };
 
 // Multi-Event Registry (Concurrent Events with Separate Google Sheets & Forms)
@@ -326,10 +327,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (paramCoord && COORDINATORS[paramCoord]) {
     state.currentUser = COORDINATORS[paramCoord];
     localStorage.setItem("vn_coordinator", JSON.stringify(COORDINATORS[paramCoord]));
+    if (COORDINATORS[paramCoord].lockedEvent) {
+      state.activeEventId = COORDINATORS[paramCoord].lockedEvent;
+    }
   }
 
   if (paramEvent && state.events[paramEvent]) {
-    state.activeEventId = paramEvent;
+    if (!state.currentUser || state.currentUser.isSuperAdmin || state.currentUser.lockedEvent === paramEvent) {
+      state.activeEventId = paramEvent;
+    }
   }
 
   initAuth();
@@ -403,9 +409,21 @@ function initAuth() {
       const coordId = activeCard ? activeCard.dataset.id : "vishnu";
       const selected = COORDINATORS[coordId] || COORDINATORS.vishnu;
 
+      if (selected.pin && pin !== selected.pin) {
+        alert(`Incorrect PIN for ${selected.name}! Please check your credentials.`);
+        return;
+      }
+
       state.currentUser = selected;
       localStorage.setItem("vn_coordinator", JSON.stringify(selected));
+      
+      if (selected.lockedEvent) {
+        state.activeEventId = selected.lockedEvent;
+        localStorage.setItem("vn_active_event", selected.lockedEvent);
+      }
+      
       updateCoordinatorUI();
+      switchEvent(state.activeEventId);
       hideLoginModal();
     });
   }
@@ -432,6 +450,22 @@ function updateCoordinatorUI() {
   if (state.currentUser) {
     if (elements.coordName) elements.coordName.textContent = state.currentUser.name;
     if (elements.coordAvatar) elements.coordAvatar.textContent = state.currentUser.avatar || state.currentUser.name[0];
+    
+    // Role-Based Isolation: Only Super Admins see all events and configuration
+    const isSuper = !!state.currentUser.isSuperAdmin;
+    const eventSwitcherNav = document.querySelector(".event-switcher-nav");
+    if (eventSwitcherNav) {
+      eventSwitcherNav.style.display = isSuper ? "flex" : "none";
+    }
+    if (elements.btnOpenSettings) {
+      elements.btnOpenSettings.style.display = isSuper ? "inline-flex" : "none";
+    }
+    if (elements.btnShareVolunteer) {
+      elements.btnShareVolunteer.style.display = isSuper ? "inline-flex" : "none";
+    }
+    if (elements.btnClearHistory) {
+      elements.btnClearHistory.style.display = isSuper ? "inline-flex" : "none";
+    }
   }
 }
 
@@ -534,6 +568,10 @@ function initUI() {
 
 function switchEvent(eventId) {
   if (!state.events[eventId]) return;
+  // If user is a volunteer with a locked event, prevent switching to other events
+  if (state.currentUser && !state.currentUser.isSuperAdmin && state.currentUser.lockedEvent && state.currentUser.lockedEvent !== eventId) {
+    eventId = state.currentUser.lockedEvent;
+  }
   state.activeEventId = eventId;
   localStorage.setItem("vn_active_event", eventId);
 
@@ -1464,11 +1502,12 @@ function populateShareDesks() {
 function getVolunteerShareLink() {
   const eventId = elements.shareEventSelect ? elements.shareEventSelect.value : state.activeEventId;
   const deskVal = elements.shareDeskSelect ? elements.shareDeskSelect.value : "gate";
+  const coordKey = eventId === "shark_tank" ? "volunteer_shark" : "volunteer_techno";
   
   const baseUrl = window.location.origin + window.location.pathname;
   const params = new URLSearchParams();
   params.set("event", eventId);
-  params.set("coord", "volunteer");
+  params.set("coord", coordKey);
 
   if (deskVal.startsWith("arena:")) {
     params.set("mode", "arena");
@@ -1506,11 +1545,14 @@ function shareWhatsapp() {
   const ev = state.events[eventId] || state.events[state.activeEventId];
   const link = getVolunteerShareLink();
   const desk = elements.shareDeskSelect ? elements.shareDeskSelect.options[elements.shareDeskSelect.selectedIndex].text : "Check-in Scanner";
+  const coordKey = eventId === "shark_tank" ? "volunteer_shark" : "volunteer_techno";
+  const pin = COORDINATORS[coordKey]?.pin || "1111";
 
   const message = `🚨 *${ev.name.toUpperCase()} — VOLUNTEER SCANNER ACCESS* 🚨\n\n` +
     `Hello Team! Here is your live check-in scanner link for *${desk}*:\n\n` +
     `📲 *Open Scanner:* ${link}\n\n` +
-    `🔑 *Security PIN:* 2026\n\n` +
+    `🔑 *Volunteer PIN:* ${pin}\n\n` +
+    `🔒 *Access Level:* Dedicated to ${ev.name} ONLY\n\n` +
     `📌 *Instructions:*\n` +
     `1. Tap the link above in Chrome (Android) or Safari (iPhone)\n` +
     `2. Allow camera permission\n` +
