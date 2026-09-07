@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TECHNO SPLURGE 2026 | Gate QR Scanner & Check-In</title>
+  
+  <!-- Font & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- HTML5 QR Code Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  
+  <!-- Canvas Confetti for Celebration on Valid Check-in -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Navigation / Header -->
+    <header class="top-header">
+      <div class="brand-block">
+        <div class="brand-badge">IIC CLUB • MALLA REDDY UNIVERSITY</div>
+        <h1 class="brand-title">TECHNO SPLURGE</h1>
+        <p class="brand-subtitle">GATE ENTRY & ARENA ATTENDANCE SCANNER</p>
+      </div>
+      
+      <div class="header-actions">
+        <div id="connectionStatus" class="connection-status status-demo" title="Connection Mode">
+          <span class="status-dot"></span>
+          <span class="status-label">Demo Mode</span>
+        </div>
+        <button id="btnOpenSettings" class="icon-btn" title="API & App Settings" aria-label="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Scan Mode Selector Bar (Main Gate Check-in VS Arena Attendance) -->
+    <section class="mode-selector-bar">
+      <div class="mode-toggle-group">
+        <button id="modeGateBtn" class="mode-btn active" data-mode="gate">
+          <span class="mode-icon">🚪</span>
+          <div class="mode-text">
+            <strong>Main Event Gate Entry</strong>
+            <small>Entry Status: CHECKED IN</small>
+          </div>
+        </button>
+        <button id="modeArenaBtn" class="mode-btn" data-mode="arena">
+          <span class="mode-icon">🎯</span>
+          <div class="mode-text">
+            <strong>Arena Attendance</strong>
+            <small>Mark Activity Present</small>
+          </div>
+        </button>
+      </div>
+
+      <!-- Activity Selector (Visible when Arena mode active) -->
+      <div id="arenaDropdownWrap" class="arena-dropdown-wrap" style="display: none;">
+        <label for="activeArenaSelect">Select Arena Desk:</label>
+        <select id="activeArenaSelect" class="form-select font-bold">
+          <option value="CEO for 10 Minutes">1. CEO for 10 Minutes</option>
+          <option value="Tech Parody">2. Tech Parody</option>
+          <option value="Open Mic">3. Open Mic</option>
+          <option value="Meme War">4. Meme War</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Quick Stats Bar -->
+    <section class="stats-bar">
+      <div class="stat-card">
+        <span class="stat-label">TOTAL REGISTERED</span>
+        <span id="statTotal" class="stat-value">0</span>
+      </div>
+      <div class="stat-card stat-checked">
+        <span class="stat-label" id="statCheckedLabel">GATE CHECKED IN</span>
+        <span id="statCheckedIn" class="stat-value">0</span>
+      </div>
+      <div class="stat-card stat-pending">
+        <span class="stat-label">PENDING</span>
+        <span id="statPending" class="stat-value">0</span>
+      </div>
+    </section>
+
+    <!-- Main Workspace Grid -->
+    <main class="main-grid">
+      
+      <!-- Scanner Column -->
+      <div class="scanner-column">
+        <div class="card scanner-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <h2 class="card-title" id="scannerTitle">Main Gate Scanner</h2>
+              <p class="card-hint" id="scannerHint">Point camera at the ticket QR code</p>
+            </div>
+            <div class="scanner-controls-top">
+              <button id="btnSwitchCamera" class="btn-sm btn-ghost" title="Switch Front/Back Camera">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 4v6h-6"></path>
+                  <path d="M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Flip
+              </button>
+            </div>
+          </div>
+
+          <!-- QR Reader Viewport -->
+          <div class="scanner-viewport-wrapper">
+            <div id="qr-reader"></div>
+            <div id="scannerOverlay" class="scanner-laser-overlay">
+              <div class="scanner-box">
+                <div class="corner-border tl"></div>
+                <div class="corner-border tr"></div>
+                <div class="corner-border bl"></div>
+                <div class="corner-border br"></div>
+                <div class="scan-laser-line"></div>
+              </div>
+            </div>
+            <div id="cameraLoading" class="camera-loading">
+              <div class="spinner"></div>
+              <span>Starting Camera...</span>
+            </div>
+          </div>
+
+          <!-- Camera Buttons & File Upload Option -->
+          <div class="scanner-footer">
+            <div class="scanner-btn-group">
+              <button id="btnToggleScan" class="btn btn-primary">
+                <span id="scanBtnIcon">⏸</span>
+                <span id="scanBtnText">Pause Scanner</span>
+              </button>
+              <label for="qrFileInput" class="btn btn-outline" title="Upload QR image file or screenshot">
+                📁 Scan Image File
+                <input type="file" id="qrFileInput" accept="image/*" style="display: none;">
+              </label>
+            </div>
+            
+            <!-- Manual Entry / Barcode Scanner Fallback -->
+            <form id="manualEntryForm" class="manual-entry-form">
+              <div class="input-with-btn">
+                <input 
+                  type="text" 
+                  id="manualRegId" 
+                  placeholder="Or enter Registration ID (e.g. TS26-0003)" 
+                  autocomplete="off" 
+                  spellcheck="false"
+                  required
+                >
+                <button type="submit" class="btn btn-secondary">Check In</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result & Verification Column -->
+      <div class="result-column">
+        
+        <!-- Live Result Card -->
+        <div id="resultCard" class="card result-card state-idle">
+          
+          <!-- Idle / Ready State -->
+          <div id="stateIdle" class="result-empty">
+            <div class="empty-icon-shield">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+            </div>
+            <h3>Ready to Scan</h3>
+            <p>Scan a participant's QR code or enter their ID to verify attendance and update your Google Sheet.</p>
+            <div class="sample-chip-group">
+              <span class="sample-label">Quick test IDs:</span>
+              <button class="chip-btn" data-id="TS26-0001">TS26-0001 (Live Google Sheet)</button>
+              <button class="chip-btn" data-id="TS26-0003">TS26-0003 (Vishnu)</button>
+              <button class="chip-btn" data-id="TS26-9999">Invalid ID</button>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div id="stateLoading" class="result-loading" style="display: none;">
+            <div class="spinner-large"></div>
+            <h3>Verifying with Google Sheet...</h3>
+            <p id="loadingRegId" class="mono-badge">TS26-0003</p>
+          </div>
+
+          <!-- Content / Verified / Warning State -->
+          <div id="stateResult" class="result-content" style="display: none;">
+            
+            <!-- Result Banner (Green / Yellow / Red) -->
+            <div id="resultBanner" class="result-banner banner-success">
+              <div class="banner-icon-wrap" id="bannerIcon">✓</div>
+              <div class="banner-text-wrap">
+                <h3 id="bannerTitle">ENTRY VERIFIED</h3>
+                <p id="bannerSubtitle">Registration confirmed & checked in</p>
+              </div>
+              <span id="bannerTimestamp" class="banner-time">18:02:15</span>
+            </div>
+
+            <!-- Participant Ticket Details Box -->
+            <div class="ticket-details-box">
+              <div class="ticket-header">
+                <div class="ticket-title-group">
+                  <span class="ticket-event-tag">TECHNO SPLURGE 2026</span>
+                  <div class="ticket-reg-id" id="displayRegId">TS26-0003</div>
+                </div>
+                <div class="payment-badge" id="displayPaymentBadge">₹119 • VERIFIED</div>
+              </div>
+
+              <!-- Participant Personal Info -->
+              <div class="participant-grid">
+                <div class="info-group full-width">
+                  <label>PARTICIPANT NAME</label>
+                  <div class="info-val info-name" id="displayName">Vishnu</div>
+                </div>
+                <div class="info-group">
+                  <label>ROLL NUMBER</label>
+                  <div class="info-val font-mono" id="displayRoll">2411cs030183</div>
+                </div>
+                <div class="info-group">
+                  <label>YEAR & SECTION</label>
+                  <div class="info-val" id="displayYearSec">3rd Year • Gamma</div>
+                </div>
+              </div>
+
+              <!-- Arenas Section -->
+              <div class="arenas-section">
+                <label class="arenas-label">SELECTED ARENAS (EXACTLY 3)</label>
+                <div class="arenas-list" id="displayArenas">
+                  <div class="arena-item">
+                    <span class="arena-num">1</span>
+                    <span class="arena-name">CEO for 10 Minutes</span>
+                  </div>
+                  <div class="arena-item">
+                    <span class="arena-num">2</span>
+                    <span class="arena-name">Tech Parody</span>
+                  </div>
+                  <div class="arena-item">
+                    <span class="arena-num">3</span>
+                    <span class="arena-name">Open Mic</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gate Check-in Metadata -->
+              <div class="gate-meta-box">
+                <div class="meta-item">
+                  <span class="meta-label">Entry Status</span>
+                  <span class="meta-value font-bold" id="displayCheckinStatus">CHECKED IN</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">Timestamp</span>
+                  <span class="meta-value font-mono" id="displayCheckinTime">2026-09-07 18:02:15</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Controls After Scan -->
+            <div class="result-actions">
+              <button id="btnNextScan" class="btn btn-primary btn-block">
+                <span>Scan Next Participant</span>
+                <span class="kbd-hint">Space / Enter</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Recent Scans History Section -->
+    <section class="history-section">
+      <div class="card history-card">
+        <div class="history-header">
+          <div class="history-title-group">
+            <h3 class="card-title">Recent Gate Check-Ins</h3>
+            <span id="historyCountBadge" class="badge">0 check-ins</span>
+          </div>
+          <div class="history-actions">
+            <input type="text" id="historySearch" placeholder="Filter by name, roll no, or ID..." class="history-filter-input">
+            <button id="btnExportCsv" class="btn-sm btn-outline">Export CSV</button>
+            <button id="btnClearHistory" class="btn-sm btn-ghost">Clear Log</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="history-table" id="historyTable">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Mode</th>
+                <th>Registration ID</th>
+                <th>Name</th>
+                <th>Roll No</th>
+                <th>Section</th>
+                <th>Selected Arenas</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr class="empty-row">
+                <td colspan="8">No participants scanned yet. Scanned entries will appear here in real time.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Scanner & Google Sheets Settings</h3>
+          <button id="btnCloseSettings" class="icon-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="apiUrlInput">Google Apps Script Web App URL</label>
+            <input 
+              type="url" 
+              id="apiUrlInput" 
+              placeholder="https://script.google.com/macros/s/.../exec"
+              class="form-control font-mono"
+            >
+            <small class="form-hint">
+              Deploy your Apps Script as a Web App (Access: "Anyone"), then paste the exec URL here. Leave empty to use local Demo Mode.
+            </small>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="switch-label">
+              <input type="checkbox" id="audioToggle" checked>
+              <span>Audio alerts & sound effects (Success chime / Warning buzzer)</span>
+            </label>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="switch-label">
+              <input type="checkbox" id="autoResumeToggle" checked>
+              <span>Auto-resume camera 3.5 seconds after scan</span>
+            </label>
+          </div>
+
+          <div class="modal-info-box">
+            <h4>💡 Setup Guide:</h4>
+            <ol>
+              <li>Open your Google Sheet (Form Responses 1).</li>
+              <li>Go to <code>Extensions</code> &gt; <code>Apps Script</code>.</li>
+              <li>Replace or update the code with the contents of <code>GoogleAppsScript_Backend.gs</code>.</li>
+              <li>Click <code>Deploy</code> &gt; <code>New deployment</code> &gt; Web app (Who has access: <strong>Anyone</strong>).</li>
+              <li>Copy and paste the Web App URL into the box above and click Save.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnTestConnection" class="btn btn-secondary">Test Connection</button>
+          <button id="btnSaveSettings" class="btn btn-primary">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
