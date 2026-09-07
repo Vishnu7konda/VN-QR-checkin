@@ -200,6 +200,7 @@ const elements = {
   btnTestConnection: document.getElementById("btnTestConnection"),
   
   coordinatorLoginModal: document.getElementById("coordinatorLoginModal"),
+  btnCloseCoordModal: document.getElementById("btnCloseCoordModal"),
   coordSelectionGrid: document.getElementById("coordSelectionGrid"),
   coordinatorLoginForm: document.getElementById("coordinatorLoginForm"),
   coordPinInput: document.getElementById("coordPinInput"),
@@ -431,6 +432,20 @@ function initAuth() {
   // Switch coordinator button
   if (elements.btnSwitchCoord) {
     elements.btnSwitchCoord.addEventListener("click", showLoginModal);
+  }
+
+  // Close / Go Back button on Coordinator Login Modal
+  if (elements.btnCloseCoordModal) {
+    elements.btnCloseCoordModal.addEventListener("click", hideLoginModal);
+  }
+
+  // Backdrop click to close login modal
+  if (elements.coordinatorLoginModal) {
+    elements.coordinatorLoginModal.addEventListener("click", (e) => {
+      if (e.target === elements.coordinatorLoginModal) {
+        hideLoginModal();
+      }
+    });
   }
 }
 

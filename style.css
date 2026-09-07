@@ -1463,6 +1463,33 @@ body {
   box-shadow: var(--shadow-elevated);
   border: 1px solid var(--border-subtle);
   animation: modalPop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.close-login-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  font-size: 1.3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.close-login-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+  transform: rotate(90deg);
 }
 
 @keyframes modalPop {
