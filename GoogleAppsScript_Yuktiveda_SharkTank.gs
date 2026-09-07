@@ -1039,7 +1039,14 @@ function getParticipantDataByRow(sheet, headers, row) {
 function doGet(e) {
   try {
     const params = (e && e.parameter) ? e.parameter : {};
-    const action = params.action || "ping";
+    const action = params.action;
+
+    // If no action parameter, serve the standalone Shark Tank Check-In Web App HTML
+    if (!action) {
+      return HtmlService.createHtmlOutput(getSharkTankCheckInHTML())
+        .setTitle("Shark Tank 2026 - Check In")
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
 
     if (action === "ping") {
       return jsonResponse({
@@ -1296,4 +1303,386 @@ function generateTicketForSelectedRow() {
   } catch (error) {
     SpreadsheetApp.getUi().alert("Ticket generation failed:\n\n" + error.message);
   }
+}
+
+
+/***************************************************************
+ * 🦈 SHARK TANK 2026 - YUKTI VEDA CLUB
+ * MULTI-MEMBER TEAM TICKET EXTENSIONS & STANDALONE CHECK-IN UI
+ ***************************************************************/
+
+const FORM = {
+  TEAM_NAME: "Team Name",
+  TEAM_SIZE: "Team Size",
+  LEADER_NAME: "Team Leader: Full Name",
+  LEADER_ROLL: "Team Leader: Roll Number",
+  LEADER_EMAIL: "Team Leader: Email Address",
+  LEADER_PHONE: "Team Leader: Phone Number",
+  MEMBER2_NAME: "Member 2: Full Name",
+  MEMBER2_ROLL: "Member 2: Roll Number",
+  MEMBER3_NAME: "Member 3: Full Name",
+  MEMBER3_ROLL: "Member 3: Roll Number"
+};
+
+const MGMT = {
+  TEAM_ID: "Team ID",
+  MEMBER1_ID: "Member 1 ID",
+  MEMBER2_ID: "Member 2 ID",
+  MEMBER3_ID: "Member 3 ID",
+  TICKET1_ID: "Ticket 1 ID",
+  TICKET2_ID: "Ticket 2 ID",
+  TICKET3_ID: "Ticket 3 ID",
+  PAYMENT_STATUS: "Payment Status",
+  TICKET_STATUS: "Ticket Status",
+  ENTRY_STATUS: "Entry Status",
+  ENTRY_TIME: "Entry Time",
+  CHECKED_BY: "Checked By",
+  TEAM_CHECKIN: "Team Check-In Status",
+  CHECKIN_STATUS_MEMBER1: "Member 1 Check-In Status",
+  CHECKIN_TIME_MEMBER1: "Member 1 Check-In Time",
+  CHECKIN_BY_MEMBER1: "Member 1 Checked By",
+  CHECKIN_STATUS_MEMBER2: "Member 2 Check-In Status",
+  CHECKIN_TIME_MEMBER2: "Member 2 Check-In Time",
+  CHECKIN_BY_MEMBER2: "Member 2 Checked By",
+  CHECKIN_STATUS_MEMBER3: "Member 3 Check-In Status",
+  CHECKIN_TIME_MEMBER3: "Member 3 Check-In Time",
+  CHECKIN_BY_MEMBER3: "Member 3 Checked By"
+};
+
+function getRegistrationSheet() {
+  return getSheet();
+}
+
+function normalize(val) {
+  return String(val || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function getTeamSize(val) {
+  const num = parseInt(String(val || "").replace(/[^0-9]/g, ""), 10);
+  if (!isNaN(num) && num >= 1 && num <= 3) return num;
+  return 1;
+}
+
+function getCheckinFields(member) {
+  if (member === 1) return { status: MGMT.CHECKIN_STATUS_MEMBER1, time: MGMT.CHECKIN_TIME_MEMBER1, by: MGMT.CHECKIN_BY_MEMBER1 };
+  if (member === 2) return { status: MGMT.CHECKIN_STATUS_MEMBER2, time: MGMT.CHECKIN_TIME_MEMBER2, by: MGMT.CHECKIN_BY_MEMBER2 };
+  return { status: MGMT.CHECKIN_STATUS_MEMBER3, time: MGMT.CHECKIN_TIME_MEMBER3, by: MGMT.CHECKIN_BY_MEMBER3 };
+}
+
+function setValue(sheet, row, headers, columnName, value) {
+  let col = findColumn(headers, [columnName]);
+  if (!col) {
+    col = sheet.getLastColumn() + 1;
+    sheet.getRange(1, col).setValue(columnName);
+    headers.push(columnName);
+  }
+  sheet.getRange(row, col).setValue(value);
+}
+
+function ensureManagementColumns(sheet) {
+  const headers = getHeaders(sheet);
+  const required = [
+    MGMT.TEAM_ID, MGMT.TICKET1_ID, MGMT.TICKET2_ID, MGMT.TICKET3_ID,
+    MGMT.PAYMENT_STATUS, MGMT.TICKET_STATUS, MGMT.ENTRY_STATUS, MGMT.ENTRY_TIME,
+    MGMT.TEAM_CHECKIN, MGMT.CHECKIN_STATUS_MEMBER1, MGMT.CHECKIN_TIME_MEMBER1, MGMT.CHECKIN_BY_MEMBER1,
+    MGMT.CHECKIN_STATUS_MEMBER2, MGMT.CHECKIN_TIME_MEMBER2, MGMT.CHECKIN_BY_MEMBER2,
+    MGMT.CHECKIN_STATUS_MEMBER3, MGMT.CHECKIN_TIME_MEMBER3, MGMT.CHECKIN_BY_MEMBER3
+  ];
+  let cur = headers.slice();
+  required.forEach(c => {
+    if (!findColumn(cur, [c])) {
+      const next = sheet.getLastColumn() + 1;
+      sheet.getRange(1, next).setValue(c);
+      cur.push(c);
+    }
+  });
+}
+
+function searchSharkTankTicket(ticketId) {
+  try {
+    ticketId = String(ticketId || "").trim();
+    if (!ticketId) return { success: false, status: "INVALID", message: "Please enter a Ticket ID." };
+
+    const sheet = getRegistrationSheet();
+    ensureManagementColumns(sheet);
+    const headers = getHeaders(sheet);
+    const ticketColumns = [MGMT.TICKET1_ID, MGMT.TICKET2_ID, MGMT.TICKET3_ID, "Registration ID", "QR Data"];
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { success: false, status: "NOT_FOUND", message: "No registrations found." };
+
+    for (let row = 2; row <= lastRow; row++) {
+      for (let member = 1; member <= 3; member++) {
+        const ticketColumn = findColumn(headers, [ticketColumns[member - 1]]);
+        if (!ticketColumn) continue;
+        const currentTicket = String(sheet.getRange(row, ticketColumn).getDisplayValue() || "").trim();
+
+        if (currentTicket && currentTicket.toUpperCase() === ticketId.toUpperCase()) {
+          const teamId = getValue(sheet, row, findColumn(headers, [MGMT.TEAM_ID]));
+          const teamName = getValue(sheet, row, findColumn(headers, [FORM.TEAM_NAME, "Team Name", "Participant: Full Name", "Full Name"]));
+          const paymentStatus = normalize(getValue(sheet, row, findColumn(headers, [MGMT.PAYMENT_STATUS, "Payment Status"])));
+          const ticketStatus = normalize(getValue(sheet, row, findColumn(headers, [MGMT.TICKET_STATUS, "Ticket Status"])));
+          const memberId = getMemberIdForCheckIn(sheet, row, headers, member);
+          const memberName = getMemberNameForCheckIn(sheet, row, headers, member);
+          const fields = getCheckinFields(member);
+          const checkInStatus = normalize(getValue(sheet, row, findColumn(headers, [fields.status, MGMT.ENTRY_STATUS, "Entry Status"])));
+          const checkInTime = getValue(sheet, row, findColumn(headers, [fields.time, MGMT.ENTRY_TIME, "Entry Time"]));
+          const checkedBy = getValue(sheet, row, findColumn(headers, [fields.by, MGMT.CHECKED_BY, "Checked By"]));
+
+          return {
+            success: true,
+            status: "FOUND",
+            row: row,
+            ticketId: currentTicket,
+            teamId: teamId,
+            teamName: teamName,
+            memberNumber: member,
+            memberId: memberId,
+            memberName: memberName || teamName,
+            paymentStatus: paymentStatus || "VERIFIED",
+            ticketStatus: ticketStatus || "SENT",
+            checkInStatus: checkInStatus,
+            checkInTime: checkInTime,
+            checkedBy: checkedBy,
+            alreadyCheckedIn: checkInStatus === "CHECKED IN"
+          };
+        }
+      }
+    }
+    return { success: false, status: "NOT_FOUND", message: "Ticket ID not found: " + ticketId };
+  } catch (error) {
+    return { success: false, status: "ERROR", message: error.message };
+  }
+}
+
+function processSharkTankCheckIn(ticketId, volunteerName) {
+  try {
+    ticketId = String(ticketId || "").trim();
+    volunteerName = String(volunteerName || "").trim();
+    if (!ticketId) return { success: false, status: "INVALID", message: "Ticket ID is required." };
+    if (!volunteerName) return { success: false, status: "INVALID", message: "Volunteer name is required." };
+
+    const lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+      const sheet = getRegistrationSheet();
+      ensureManagementColumns(sheet);
+      const headers = getHeaders(sheet);
+
+      const result = findSharkTankTicketInternal(sheet, headers, ticketId);
+      if (!result.success) return result;
+
+      const row = result.row;
+      const member = result.member;
+
+      const paymentStatus = normalize(getValue(sheet, row, findColumn(headers, [MGMT.PAYMENT_STATUS, "Payment Status"])));
+      if (paymentStatus && paymentStatus !== "VERIFIED" && paymentStatus !== "PAID") {
+        return { success: false, status: "PAYMENT_NOT_VERIFIED", message: "PAYMENT NOT VERIFIED", ticketId: result.ticketId, teamName: result.teamName, memberName: result.memberName };
+      }
+
+      const fields = getCheckinFields(member);
+      const existingStatus = normalize(getValue(sheet, row, findColumn(headers, [fields.status])));
+      if (existingStatus === "CHECKED IN") {
+        const previousTime = getValue(sheet, row, findColumn(headers, [fields.time]));
+        const previousVolunteer = getValue(sheet, row, findColumn(headers, [fields.by]));
+        return { success: false, status: "ALREADY_CHECKED_IN", message: "Already checked in.", ticketId: result.ticketId, teamName: result.teamName, memberName: result.memberName, memberId: result.memberId, checkInTime: previousTime, checkedBy: previousVolunteer };
+      }
+
+      const now = new Date();
+      setValue(sheet, row, headers, fields.status, "CHECKED IN");
+      setValue(sheet, row, headers, fields.time, now);
+      setValue(sheet, row, headers, fields.by, volunteerName);
+
+      if (member === 1) {
+        setValue(sheet, row, headers, MGMT.ENTRY_STATUS, "CHECKED IN");
+        setValue(sheet, row, headers, MGMT.ENTRY_TIME, formatDate(now));
+      }
+
+      const teamStatus = calculateSharkTankTeamCheckInStatus(sheet, row, headers);
+      setValue(sheet, row, headers, MGMT.TEAM_CHECKIN, teamStatus);
+      SpreadsheetApp.flush();
+
+      return {
+        success: true,
+        status: "CHECKED_IN",
+        message: "CHECK-IN SUCCESSFUL",
+        ticketId: result.ticketId,
+        teamId: result.teamId,
+        teamName: result.teamName,
+        memberNumber: member,
+        memberId: result.memberId,
+        memberName: result.memberName,
+        checkInTime: formatDate(now),
+        checkedBy: volunteerName,
+        teamCheckInStatus: teamStatus
+      };
+    } finally {
+      lock.releaseLock();
+    }
+  } catch (error) {
+    return { success: false, status: "ERROR", message: error.message || "Check-in failed." };
+  }
+}
+
+function findSharkTankTicketInternal(sheet, headers, ticketId) {
+  const normalizedTicket = normalize(ticketId);
+  const ticketColumns = [MGMT.TICKET1_ID, MGMT.TICKET2_ID, MGMT.TICKET3_ID, "Registration ID", "QR Data"];
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { success: false, status: "NOT_FOUND", message: "No registrations found." };
+
+  for (let row = 2; row <= lastRow; row++) {
+    for (let member = 1; member <= 3; member++) {
+      const column = findColumn(headers, [ticketColumns[member - 1]]);
+      if (!column) continue;
+      const value = normalize(sheet.getRange(row, column).getDisplayValue());
+      if (value && value === normalizedTicket) {
+        const teamId = getValue(sheet, row, findColumn(headers, [MGMT.TEAM_ID]));
+        const teamName = getValue(sheet, row, findColumn(headers, [FORM.TEAM_NAME, "Team Name", "Participant: Full Name", "Full Name"]));
+        const memberId = getMemberIdForCheckIn(sheet, row, headers, member);
+        const memberName = getMemberNameForCheckIn(sheet, row, headers, member);
+        return {
+          success: true,
+          row: row,
+          member: member,
+          ticketId: sheet.getRange(row, column).getDisplayValue().trim(),
+          teamId: teamId,
+          teamName: teamName,
+          memberId: memberId,
+          memberName: memberName || teamName
+        };
+      }
+    }
+  }
+  return { success: false, status: "NOT_FOUND", message: "Ticket not found." };
+}
+
+function getMemberIdForCheckIn(sheet, row, headers, member) {
+  if (member === 1) return getValue(sheet, row, findColumn(headers, [MGMT.MEMBER1_ID]));
+  if (member === 2) return getValue(sheet, row, findColumn(headers, [MGMT.MEMBER2_ID]));
+  return getValue(sheet, row, findColumn(headers, [MGMT.MEMBER3_ID]));
+}
+
+function getMemberNameForCheckIn(sheet, row, headers, member) {
+  if (member === 1) return getValue(sheet, row, findColumn(headers, [FORM.LEADER_NAME, "Participant: Full Name", "Full Name", "Name"]));
+  if (member === 2) return getValue(sheet, row, findColumn(headers, [FORM.MEMBER2_NAME]));
+  return getValue(sheet, row, findColumn(headers, [FORM.MEMBER3_NAME]));
+}
+
+function calculateSharkTankTeamCheckInStatus(sheet, row, headers) {
+  const teamSize = getTeamSize(getValue(sheet, row, findColumn(headers, [FORM.TEAM_SIZE])));
+  let checkedIn = 0;
+  for (let member = 1; member <= teamSize; member++) {
+    const fields = getCheckinFields(member);
+    const status = normalize(getValue(sheet, row, findColumn(headers, [fields.status])));
+    if (status === "CHECKED IN") checkedIn++;
+  }
+  if (checkedIn === 0) return "NOT CHECKED IN";
+  if (checkedIn >= teamSize) return "FULLY CHECKED IN";
+  return "PARTIALLY CHECKED IN";
+}
+
+function getSharkTankCheckInStats() {
+  return getEventStats();
+}
+
+function formatDate(date) {
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+}
+
+function getSharkTankCheckInHTML() {
+  return String.raw`
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shark Tank 2026 Check-In</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f8; color: #111827; }
+.container { width: 100%; max-width: 650px; margin: 0 auto; padding: 20px; }
+.header { background: #064e3b; color: white; border-radius: 22px; padding: 26px; margin-bottom: 18px; text-align: center; }
+.logo { font-size: 38px; margin-bottom: 8px; }
+.title { font-size: 27px; font-weight: 800; }
+.subtitle { margin-top: 5px; color: #a7f3d0; }
+.card { background: white; border-radius: 20px; padding: 22px; margin-bottom: 18px; box-shadow: 0 5px 22px rgba(0,0,0,.08); }
+label { display: block; font-weight: 700; margin-bottom: 8px; }
+input { width: 100%; padding: 15px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; outline: none; margin-bottom: 12px; }
+button { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 6px; }
+.verify { background: #111827; color: white; }
+.checkin { background: #059669; color: white; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.result { display: none; }
+.success { border: 2px solid #059669; background: #ecfdf5; }
+.error { border: 2px solid #dc2626; background: #fef2f2; }
+.warning { border: 2px solid #f59e0b; background: #fffbeb; }
+.member { font-size: 22px; font-weight: 800; }
+.info { margin-top: 12px; padding: 10px; background: rgba(0,0,0,0.04); border-radius: 8px; line-height: 1.6; }
+.spinner { display: none; text-align: center; margin-top: 10px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">🦈</div>
+    <div class="title">SHARK TANK 2026</div>
+    <div class="subtitle">Yukti Veda Club · Entry Check-In</div>
+  </div>
+  <div class="card">
+    <label>Volunteer Name</label>
+    <input id="volunteer" type="text" placeholder="Enter volunteer name" value="Scanner Volunteer">
+    <label>Ticket ID</label>
+    <input id="ticket" type="text" placeholder="Scan / enter ticket ID (e.g. ST26-0001)" autocomplete="off">
+    <button class="verify" id="verifyButton" onclick="verifyTicket()">VERIFY TICKET</button>
+    <button class="checkin" id="checkinButton" onclick="checkIn()" disabled>CONFIRM ENTRY CHECK-IN</button>
+    <div class="spinner" id="spinner">Processing...</div>
+  </div>
+  <div class="card result" id="result">
+    <div id="resultContent"></div>
+  </div>
+</div>
+<script>
+var currentTicket = null;
+function verifyTicket() {
+  var ticket = document.getElementById("ticket").value.trim();
+  if (!ticket) return;
+  document.getElementById("spinner").style.display = "block";
+  google.script.run
+    .withSuccessHandler(function(res) {
+      document.getElementById("spinner").style.display = "none";
+      if (!res.success) {
+        document.getElementById("result").className = "card result error";
+        document.getElementById("result").style.display = "block";
+        document.getElementById("resultContent").innerHTML = "<div class='member'>" + (res.message || "Not Found") + "</div>";
+        return;
+      }
+      currentTicket = res.ticketId;
+      document.getElementById("result").className = "card result success";
+      document.getElementById("result").style.display = "block";
+      document.getElementById("resultContent").innerHTML = "<div class='member'>" + (res.memberName || res.teamName) + "</div><div class='info'>Ticket: " + res.ticketId + "<br>Team: " + (res.teamName || "-") + "<br>Status: " + (res.checkInStatus || "NOT CHECKED IN") + "</div>";
+      document.getElementById("checkinButton").disabled = false;
+    })
+    .searchSharkTankTicket(ticket);
+}
+function checkIn() {
+  var vol = document.getElementById("volunteer").value.trim();
+  if (!currentTicket) return;
+  document.getElementById("spinner").style.display = "block";
+  google.script.run
+    .withSuccessHandler(function(res) {
+      document.getElementById("spinner").style.display = "none";
+      if (res.success) {
+        document.getElementById("result").className = "card result success";
+        document.getElementById("resultContent").innerHTML = "<div class='member' style='color:#059669;'>✅ CHECK-IN SUCCESSFUL</div><div class='info'>Ticket: " + res.ticketId + "<br>Participant: " + res.memberName + "<br>Time: " + res.checkInTime + "</div>";
+        document.getElementById("ticket").value = "";
+        document.getElementById("checkinButton").disabled = true;
+      } else {
+        document.getElementById("result").className = "card result error";
+        document.getElementById("resultContent").innerHTML = "<div class='member'>" + res.message + "</div>";
+      }
+    })
+    .processSharkTankCheckIn(currentTicket, vol);
+}
+</script>
+</body>
+</html>
+`;
 }
