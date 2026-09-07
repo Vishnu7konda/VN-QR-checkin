@@ -459,6 +459,22 @@ function showLoginModal() {
   const paramCoord = urlParams.get("coord");
   const paramEvent = urlParams.get("event") || state.activeEventId;
 
+  // Determine if this is a restricted volunteer context
+  const isVolunteerParam = paramCoord && (paramCoord === "volunteer_shark" || paramCoord === "volunteer_techno");
+  const isVolunteerUser = state.currentUser && !state.currentUser.isSuperAdmin;
+  const isVolunteerContext = isVolunteerParam || isVolunteerUser;
+
+  const modalTitle = elements.coordinatorLoginModal.querySelector(".login-title");
+  const modalDesc = elements.coordinatorLoginModal.querySelector(".login-desc");
+
+  if (isVolunteerContext) {
+    if (modalTitle) modalTitle.textContent = "Volunteer Staff Checkpoint";
+    if (modalDesc) modalDesc.textContent = "Enter your volunteer staff access PIN to operate the scanner.";
+  } else {
+    if (modalTitle) modalTitle.textContent = "Coordinator Login Portal";
+    if (modalDesc) modalDesc.textContent = "Select your coordinator identity to operate the scanner and stamp verified check-ins.";
+  }
+
   // Filter login profile cards
   if (elements.coordSelectionGrid) {
     const cards = elements.coordSelectionGrid.querySelectorAll(".coord-card");
@@ -468,15 +484,26 @@ function showLoginModal() {
       const id = card.dataset.id;
       let visible = true;
 
-      // If opened via volunteer magic link, ONLY show that exact volunteer card!
-      if (paramCoord && (paramCoord === "volunteer_shark" || paramCoord === "volunteer_techno")) {
-        visible = (id === paramCoord);
-      } else if (paramEvent === "shark_tank") {
-        // If on Shark Tank event, hide Techno Splurge volunteer profile
-        visible = (id !== "volunteer_techno");
-      } else if (paramEvent === "techno_splurge") {
-        // If on Techno Splurge event, hide Shark Tank volunteer profile
-        visible = (id !== "volunteer_shark");
+      if (isVolunteerContext) {
+        // Volunteer mode: NEVER show Vishnu or Nikhil!
+        if (id === "vishnu" || id === "nikhil") {
+          visible = false;
+        } else if (paramCoord) {
+          visible = (id === paramCoord);
+        } else if (state.currentUser && state.currentUser.lockedEvent) {
+          visible = (id === (state.currentUser.lockedEvent === "shark_tank" ? "volunteer_shark" : "volunteer_techno"));
+        } else if (paramEvent === "shark_tank") {
+          visible = (id === "volunteer_shark");
+        } else if (paramEvent === "techno_splurge") {
+          visible = (id === "volunteer_techno");
+        }
+      } else {
+        // Super Admin mode: show Super Admins and the event volunteer
+        if (paramEvent === "shark_tank") {
+          visible = (id !== "volunteer_techno");
+        } else if (paramEvent === "techno_splurge") {
+          visible = (id !== "volunteer_shark");
+        }
       }
 
       card.style.display = visible ? "flex" : "none";
@@ -1215,7 +1242,7 @@ function displayScanResult(result) {
     addHistoryRecord({
       time: nowTime,
       scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
-      mode: state.currentMode === "gate" ? (state.events[state.activeEventId]?.gateLabel || "Gate Entry") : state.activeArena,
+      mode: state.currentMode === "gate" ? "Gate Entry" : state.activeArena,
       regId: regId,
       name: name,
       rollNo: rollNo,
@@ -1240,7 +1267,7 @@ function displayScanResult(result) {
     addHistoryRecord({
       time: nowTime,
       scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
-      mode: state.currentMode === "gate" ? (state.events[state.activeEventId]?.gateLabel || "Gate Entry") : state.activeArena,
+      mode: state.currentMode === "gate" ? "Gate Entry" : state.activeArena,
       regId: regId,
       name: name,
       rollNo: rollNo,
@@ -1265,7 +1292,7 @@ function displayScanResult(result) {
     addHistoryRecord({
       time: nowTime,
       scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
-      mode: state.currentMode === "gate" ? (state.events[state.activeEventId]?.gateLabel || "Gate Entry") : state.activeArena,
+      mode: state.currentMode === "gate" ? "Gate Entry" : state.activeArena,
       regId: regId,
       name: name || "Unknown",
       rollNo: rollNo || "—",
@@ -1390,11 +1417,17 @@ function renderHistory(filterText = "") {
     return;
   }
 
-  elements.historyTableBody.innerHTML = filtered.map(item => `
+  elements.historyTableBody.innerHTML = filtered.map(item => {
+    const rawMode = (item.mode || "Gate Entry").trim();
+    const isGate = rawMode === "gate" || rawMode === "Gate Entry" || rawMode === "Main Event Gate Entry";
+    const modeClass = isGate ? "mode-gate" : "mode-arena";
+    const modeText = isGate ? "Gate Entry" : rawMode;
+
+    return `
     <tr>
       <td class="font-mono">${escapeHtml(item.time || '—')}</td>
       <td class="font-mono font-bold" style="color: var(--emerald-primary);">${escapeHtml(item.scannedBy || 'Vishnu')}</td>
-      <td><span class="badge" style="background: var(--brand-subtle); color: var(--brand-light); border-color: var(--border-brand);">${escapeHtml(item.mode || "Gate")}</span></td>
+      <td><span class="mode-badge ${modeClass}">${escapeHtml(modeText)}</span></td>
       <td class="font-mono font-bold">${escapeHtml(item.regId || '—')}</td>
       <td><strong>${escapeHtml(item.name || 'Participant')}</strong></td>
       <td class="font-mono">${escapeHtml(item.rollNo || '—')}</td>
@@ -1402,7 +1435,8 @@ function renderHistory(filterText = "") {
       <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.arenas || '—')}">${escapeHtml(item.arenas || '—')}</td>
       <td><span class="status-tag ${item.statusClass || 'tag-success'}">${escapeHtml(item.status || 'CHECKED IN')}</span></td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function filterHistory(query) {

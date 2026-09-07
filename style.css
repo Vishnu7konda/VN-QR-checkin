@@ -1210,6 +1210,10 @@ body {
 }
 
 .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   background: var(--emerald-subtle);
   border: 1px solid var(--border-emerald);
   padding: 4px 12px;
@@ -1217,6 +1221,32 @@ body {
   font-size: 0.76rem;
   font-weight: 700;
   color: var(--emerald-primary);
+  line-height: 1.2;
+}
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+}
+
+.mode-badge.mode-gate {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.mode-badge.mode-arena {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
 }
 
 .history-actions {
@@ -1244,14 +1274,17 @@ body {
 
 .table-responsive {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: #ffffff;
   box-shadow: var(--shadow-card);
+  width: 100%;
 }
 
 .history-table {
   width: 100%;
+  min-width: 860px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.86rem;
@@ -1259,19 +1292,31 @@ body {
 
 .history-table th {
   background: var(--bg-card-subtle);
-  padding: 14px 18px;
+  padding: 13px 16px;
   font-size: 0.72rem;
   font-weight: 800;
   color: var(--text-muted);
   letter-spacing: 0.8px;
   text-transform: uppercase;
   border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
 }
 
 .history-table td {
-  padding: 13px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.history-table th:nth-child(1), .history-table td:nth-child(1),
+.history-table th:nth-child(2), .history-table td:nth-child(2),
+.history-table th:nth-child(3), .history-table td:nth-child(3),
+.history-table th:nth-child(4), .history-table td:nth-child(4),
+.history-table th:nth-child(6), .history-table td:nth-child(6),
+.history-table th:nth-child(7), .history-table td:nth-child(7),
+.history-table th:nth-child(9), .history-table td:nth-child(9) {
+  white-space: nowrap;
 }
 
 .history-table tr:hover td {
@@ -1283,14 +1328,19 @@ body {
   text-align: center;
   padding: 38px 16px;
   color: var(--text-muted);
+  white-space: normal !important;
 }
 
 .status-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.74rem;
   font-weight: 700;
+  line-height: 1.2;
 }
 .status-tag.tag-success {
   background: var(--emerald-subtle);
