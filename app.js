@@ -7,8 +7,8 @@
 
 // Coordinator Access Profiles
 const COORDINATORS = {
-  vishnu: { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin", pin: "2026", isSuperAdmin: true },
-  nikhil: { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations", pin: "2026", isSuperAdmin: true }
+  vishnu: { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin", pin: "0904", isSuperAdmin: true },
+  nikhil: { id: "nikhil", name: "Sai Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations Lead", pin: "2402", isSuperAdmin: true }
 };
 
 // Multi-Event Registry (Concurrent Events with Separate Google Sheets & Forms)
@@ -497,10 +497,15 @@ function initAuth() {
 
 function updateCoordinatorsList() {
   if (!COORDINATORS.vishnu) {
-    COORDINATORS.vishnu = { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin", pin: "2026", isSuperAdmin: true };
+    COORDINATORS.vishnu = { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin", pin: "0904", isSuperAdmin: true };
+  } else {
+    COORDINATORS.vishnu.pin = "0904";
   }
   if (!COORDINATORS.nikhil) {
-    COORDINATORS.nikhil = { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations", pin: "2026", isSuperAdmin: true };
+    COORDINATORS.nikhil = { id: "nikhil", name: "Sai Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations Lead", pin: "2402", isSuperAdmin: true };
+  } else {
+    COORDINATORS.nikhil.name = "Sai Nikhil";
+    COORDINATORS.nikhil.pin = "2402";
   }
 
   // Dynamically ensure volunteer profiles exist for all club events
@@ -560,13 +565,13 @@ function showLoginModal() {
           <span class="coord-pill-tag tag-lead">Super Admin</span>
         </div>
 
-        <div class="coord-card" data-id="nikhil" data-name="Nikhil" data-role="Arena & Gate Lead">
+        <div class="coord-card" data-id="nikhil" data-name="Sai Nikhil" data-role="Arena & Gate Lead">
           <div class="coord-avatar-large avatar-nikhil">N</div>
           <div class="coord-details">
-            <strong>Nikhil</strong>
+            <strong>Sai Nikhil</strong>
             <span class="coord-role-text">Arena & Gate Lead</span>
           </div>
-          <span class="coord-pill-tag tag-ops">Operations</span>
+          <span class="coord-pill-tag tag-ops">Operations Lead</span>
         </div>
       `;
     }
