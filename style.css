@@ -1406,8 +1406,82 @@ body {
   color: var(--text-pure);
 }
 
+/* Modal Tab Navigation */
+.modal-tabs {
+  display: flex;
+  background: var(--bg-card-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 6px 12px 0;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+}
+
+.modal-tab-btn:hover {
+  color: var(--text-pure);
+}
+
+.modal-tab-btn.active {
+  color: var(--emerald-primary);
+  border-bottom-color: var(--emerald-primary);
+  background: #ffffff;
+}
+
+.tab-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.event-manage-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+
+.event-manage-item.active-event-item {
+  border-color: var(--emerald-primary);
+  background: #f0fdf4;
+}
+
+.club-badge-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  color: var(--emerald-primary);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
 .modal-body {
-  padding: 24px;
+  padding: 20px 24px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

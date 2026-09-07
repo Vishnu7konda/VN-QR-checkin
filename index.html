@@ -365,68 +365,162 @@
 
     <!-- Multi-Event & Sheets Configuration Modal -->
     <div id="settingsModal" class="modal-overlay" style="display: none;">
-      <div class="modal-card">
+      <div class="modal-card" style="max-width: 620px;">
         <div class="modal-header">
           <div>
-            <h3 style="margin-bottom: 2px;">Multi-Event & Google Sheet Settings</h3>
-            <small style="color: var(--text-muted); font-size: 0.78rem;">Configure separate Google Sheets / Forms for concurrent events</small>
+            <h3 style="margin-bottom: 2px;">Multi-Club & Event Sheets Manager</h3>
+            <small style="color: var(--text-muted); font-size: 0.78rem;">Add new events, connect separate Google Sheets, and configure clubs</small>
           </div>
           <button id="btnCloseSettings" class="icon-btn" type="button">&times;</button>
         </div>
-        <div class="modal-body">
-          <!-- Active Event Configuration -->
-          <div class="form-group" style="background: var(--bg-card-subtle); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-            <label style="color: var(--emerald-primary); font-weight: 800;">ACTIVE EVENT: <span id="settingsActiveEventName">Yuktiveda Club</span></label>
-            <label for="apiUrlInput" style="margin-top: 8px;">Google Apps Script Web App URL for this event:</label>
-            <input 
-              type="url" 
-              id="apiUrlInput" 
-              placeholder="https://script.google.com/macros/s/.../exec"
-              class="form-control font-mono"
-            >
-            <small class="form-hint">
-              Each event can have its own independent Google Sheet & Apps Script deployment!
-            </small>
-          </div>
 
-          <!-- Event Details Config -->
-          <div class="participant-grid" style="gap: 12px; margin-top: 0;">
-            <div class="form-group">
-              <label for="eventPrefixInput">Ticket ID Prefix</label>
-              <input type="text" id="eventPrefixInput" class="form-control font-mono" placeholder="e.g. YC26- or IIC26-">
+        <!-- Modal Tabs -->
+        <nav class="modal-tabs" aria-label="Event Configuration Tabs">
+          <button type="button" class="modal-tab-btn active" data-tab="tabActiveEvent">⚙️ Active Event</button>
+          <button type="button" class="modal-tab-btn" data-tab="tabAddEvent">➕ Add New Event</button>
+          <button type="button" class="modal-tab-btn" data-tab="tabManageEvents">📋 All Events (<span id="tabEventsCount">2</span>)</button>
+          <button type="button" class="modal-tab-btn" data-tab="tabGuide">📖 Sheet Setup</button>
+        </nav>
+
+        <div class="modal-body">
+          <!-- TAB 1: ACTIVE EVENT CONFIG -->
+          <div id="tabActiveEvent" class="tab-pane">
+            <div class="form-group" style="background: var(--bg-card-subtle); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span class="club-badge-tag" id="settingsActiveClubTag">YUKTIVEDA CLUB</span>
+                <span style="font-size: 0.72rem; color: var(--emerald-primary); font-weight: 700;">CURRENTLY ACTIVE</span>
+              </div>
+              <h4 id="settingsActiveEventName" style="font-size: 1.1rem; color: var(--text-pure); margin-bottom: 8px;">Shark Tank</h4>
+              <label for="apiUrlInput">Google Apps Script Web App URL:</label>
+              <input 
+                type="url" 
+                id="apiUrlInput" 
+                placeholder="https://script.google.com/macros/s/.../exec"
+                class="form-control font-mono"
+              >
+              <small class="form-hint">
+                Responses and check-ins for this event sync with this dedicated Google Sheet.
+              </small>
             </div>
+
+            <div class="participant-grid" style="gap: 12px; margin-top: 0;">
+              <div class="form-group">
+                <label for="eventPrefixInput">Ticket ID Prefix</label>
+                <input type="text" id="eventPrefixInput" class="form-control font-mono" placeholder="e.g. ST26- or TS26-">
+              </div>
+              <div class="form-group">
+                <label for="eventVolunteerPinInput">Volunteer Access PIN</label>
+                <input type="text" id="eventVolunteerPinInput" class="form-control font-mono" placeholder="e.g. 1111" maxlength="8">
+              </div>
+            </div>
+
             <div class="form-group">
               <label for="eventSubtitleInput">Event Tagline / Subtitle</label>
-              <input type="text" id="eventSubtitleInput" class="form-control" placeholder="e.g. Official Event Check-In">
+              <input type="text" id="eventSubtitleInput" class="form-control" placeholder="e.g. Official Gate Entry & Rounds Scanner">
+            </div>
+
+            <div class="form-group">
+              <label for="eventArenasInput">Sub-Activities / Arenas (comma-separated)</label>
+              <input type="text" id="eventArenasInput" class="form-control" placeholder="e.g. Round 1, Round 2, Finals">
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label class="switch-label">
+                <input type="checkbox" id="audioToggle" checked>
+                <span>Audio alerts & sound effects (Chimes / Buzzers)</span>
+              </label>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label class="switch-label">
+                <input type="checkbox" id="autoResumeToggle" checked>
+                <span>Auto-resume camera 3.5 seconds after scan</span>
+              </label>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 6px;">
+              <button id="btnTestConnection" class="btn btn-secondary" style="flex: 1;" type="button">Test Connection</button>
+              <button id="btnSaveSettings" class="btn btn-primary" style="flex: 1;" type="button">Save Event Config</button>
             </div>
           </div>
 
-          <div class="form-group checkbox-group">
-            <label class="switch-label">
-              <input type="checkbox" id="audioToggle" checked>
-              <span>Audio alerts & sound effects (Chimes / Buzzers)</span>
-            </label>
+          <!-- TAB 2: ADD NEW EVENT -->
+          <div id="tabAddEvent" class="tab-pane" style="display: none;">
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; color: #166534;">
+              💡 <strong>Host Concurrent Events:</strong> Add any new event under Yuktiveda, IIC, or a brand new club with its own independent Google Sheet.
+            </div>
+
+            <div class="form-group">
+              <label for="newClubSelect">Parent Club / Organization</label>
+              <select id="newClubSelect" class="form-select font-bold">
+                <option value="Yuktiveda Club">Yuktiveda Club</option>
+                <option value="IIC Club">IIC Club</option>
+                <option value="__new__">➕ Add New Club / Organization...</option>
+              </select>
+              <input type="text" id="newClubCustomInput" class="form-control" placeholder="Enter New Club Name (e.g. ACM Club, IEEE, Robotics Club)" style="display: none; margin-top: 6px;">
+            </div>
+
+            <div class="form-group">
+              <label for="newEventNameInput">Event Name *</label>
+              <input type="text" id="newEventNameInput" class="form-control font-bold" placeholder="e.g. Ideathon 2026, Startup Pitch, Hackathon" required>
+            </div>
+
+            <div class="form-group">
+              <label for="newApiUrlInput">Google Apps Script Web App URL for this Event</label>
+              <input type="url" id="newApiUrlInput" class="form-control font-mono" placeholder="https://script.google.com/macros/s/.../exec">
+              <small class="form-hint">Leave blank to use offline/demo mode until you deploy the sheet.</small>
+            </div>
+
+            <div class="participant-grid" style="gap: 12px; margin-top: 0;">
+              <div class="form-group">
+                <label for="newPrefixInput">Ticket Prefix</label>
+                <input type="text" id="newPrefixInput" class="form-control font-mono" placeholder="e.g. ID26-, HACK-">
+              </div>
+              <div class="form-group">
+                <label for="newVolunteerPinInput">Volunteer Access PIN</label>
+                <input type="text" id="newVolunteerPinInput" class="form-control font-mono" placeholder="e.g. 3333" value="3333" maxlength="8">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newArenasInput">Rounds / Activities / Arenas (comma-separated)</label>
+              <input type="text" id="newArenasInput" class="form-control" placeholder="e.g. Round 1: PPT, Round 2: Prototype, Grand Finale">
+            </div>
+
+            <button id="btnCreateNewEvent" class="btn btn-primary btn-block" type="button" style="margin-top: 8px;">
+              <span>➕ Create & Launch Event</span>
+            </button>
           </div>
 
-          <div class="form-group checkbox-group">
-            <label class="switch-label">
-              <input type="checkbox" id="autoResumeToggle" checked>
-              <span>Auto-resume camera 3.5 seconds after scan</span>
-            </label>
+          <!-- TAB 3: MANAGE ALL EVENTS -->
+          <div id="tabManageEvents" class="tab-pane" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.84rem; font-weight: 700; color: var(--text-secondary);">All Configured Club Events:</span>
+              <button id="btnOpenAddNewTab" class="btn-sm" type="button">➕ New Event</button>
+            </div>
+            <div id="manageEventsList" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Dynamic event items injected here -->
+            </div>
           </div>
 
-          <div class="modal-info-box">
-            <h4>💡 Multi-Event Google Forms Architecture:</h4>
-            <ol>
-              <li><strong>Concurrent Events:</strong> Open <em>Yuktiveda Club</em> on one device and <em>IIC Club</em> on another, or toggle between them anytime.</li>
-              <li><strong>Separate Google Forms:</strong> Each event links to its own Google Sheet response tab.</li>
-              <li><strong>Audit Logging:</strong> Every scan is stamped with the active coordinator (Vishnu, Nikhil, etc.).</li>
-            </ol>
+          <!-- TAB 4: SHEET SETUP GUIDE -->
+          <div id="tabGuide" class="tab-pane" style="display: none;">
+            <div class="modal-info-box" style="margin: 0;">
+              <h4 style="margin-bottom: 10px;">📋 How to Connect Any Google Sheet (2 Minutes):</h4>
+              <ol style="margin-left: 18px; line-height: 1.6; font-size: 0.84rem;">
+                <li><strong>Create Google Form:</strong> Create your registration form & open its linked Google Sheet.</li>
+                <li><strong>Open Script Editor:</strong> Inside the Google Sheet, click <code>Extensions</code> &gt; <code>Apps Script</code>.</li>
+                <li><strong>Paste Backend Code:</strong> Delete existing code, paste the contents of <code>GoogleAppsScript_Backend.gs</code> from this project, and click <strong>Save (💾)</strong>.</li>
+                <li><strong>Deploy as Web App:</strong> Click <strong>Deploy</strong> &gt; <strong>New deployment</strong> &gt; select type <strong>Web app</strong>:
+                  <ul style="margin-top: 4px; margin-bottom: 4px;">
+                    <li><em>Execute as:</em> <strong>Me</strong></li>
+                    <li><em>Who has access:</em> <strong>Anyone</strong> (critical for scanner API requests!)</li>
+                  </ul>
+                </li>
+                <li><strong>Copy Web App URL:</strong> Copy the URL ending in <code>/exec</code> and paste it into the <strong>Google Sheet Web App URL</strong> field in Tab 2 or Tab 1.</li>
+              </ol>
+            </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button id="btnTestConnection" class="btn btn-secondary" type="button">Test Sheet Connection</button>
-          <button id="btnSaveSettings" class="btn btn-primary" type="button">Save Event Config</button>
         </div>
       </div>
     </div>

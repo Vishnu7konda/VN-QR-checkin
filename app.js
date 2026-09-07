@@ -8,27 +8,28 @@
 // Coordinator Access Profiles
 const COORDINATORS = {
   vishnu: { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin", pin: "2026", isSuperAdmin: true },
-  nikhil: { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations", pin: "2026", isSuperAdmin: true },
-  volunteer_shark: { id: "volunteer_shark", name: "Yuktiveda Club Staff", role: "Event Staff", avatar: "🦈", badge: "Yuktiveda Club", pin: "1111", lockedEvent: "shark_tank", isSuperAdmin: false },
-  volunteer_techno: { id: "volunteer_techno", name: "IIC Club Staff", role: "Event Staff", avatar: "⚡", badge: "IIC Club", pin: "2222", lockedEvent: "techno_splurge", isSuperAdmin: false }
+  nikhil: { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations", pin: "2026", isSuperAdmin: true }
 };
 
 // Multi-Event Registry (Concurrent Events with Separate Google Sheets & Forms)
 const DEFAULT_EVENTS = {
   shark_tank: {
     id: "shark_tank",
-    name: "Yuktiveda Club",
+    club: "Yuktiveda Club",
+    name: "Shark Tank",
     brandBadge: "YUKTIVEDA CLUB • 2026",
     brandTitle: "YUKTIVEDA CLUB",
-    brandSubtitle: "GATE ENTRY & ARENA ATTENDANCE SCANNER",
-    prefix: "YC26-",
+    brandSubtitle: "GATE ENTRY & PITCH ROUNDS SCANNER",
+    prefix: "ST26-",
     apiUrl: localStorage.getItem("ts_api_url_shark_tank") || "",
     gateLabel: "Main Gate Entry",
-    arenaModeLabel: "Arena Attendance",
+    arenaModeLabel: "Pitch Rounds",
     arenas: ["Shark Tank Pitching", "Round 1: 3-Minute Pitch", "Round 2: Shark Q&A", "Round 3: Valuation Battle"],
+    volunteerPin: "1111",
+    isBuiltin: true,
     demoDatabase: {
-      "YC26-0001": {
-        registrationId: "YC26-0001",
+      "ST26-0001": {
+        registrationId: "ST26-0001",
         name: "EcoTech Innovations",
         roll: "Team Alpha (Lead: Rohan)",
         year: "Startup Track",
@@ -40,8 +41,8 @@ const DEFAULT_EVENTS = {
         entryTime: "",
         arenaAttendance: {}
       },
-      "YC26-0002": {
-        registrationId: "YC26-0002",
+      "ST26-0002": {
+        registrationId: "ST26-0002",
         name: "BioHealth Diagnostics",
         roll: "Team Beta (Lead: Sneha)",
         year: "HealthTech Track",
@@ -57,18 +58,21 @@ const DEFAULT_EVENTS = {
   },
   techno_splurge: {
     id: "techno_splurge",
-    name: "IIC Club",
+    club: "IIC Club",
+    name: "Techno Splurge",
     brandBadge: "IIC CLUB • 2026",
     brandTitle: "IIC CLUB",
     brandSubtitle: "GATE ENTRY & ARENA ATTENDANCE SCANNER",
-    prefix: "IIC26-",
+    prefix: "TS26-",
     apiUrl: localStorage.getItem("ts_api_url_techno_splurge") || "https://script.google.com/macros/s/AKfycbyxI1_OrOcPZx76WYQ9LSoE7v-dhEQm-1IINWv5B5-m-POJzs11kNSSs6pMMVFBYhJKMw/exec",
     gateLabel: "Main Gate Entry",
     arenaModeLabel: "Arena Attendance",
     arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic", "Meme War"],
+    volunteerPin: "2222",
+    isBuiltin: true,
     demoDatabase: {
-      "IIC26-0001": {
-        registrationId: "IIC26-0001",
+      "TS26-0001": {
+        registrationId: "TS26-0001",
         name: "Sai Nikhil",
         roll: "2411CS030059",
         year: "3rd Year",
@@ -80,8 +84,8 @@ const DEFAULT_EVENTS = {
         entryTime: "",
         arenaAttendance: {}
       },
-      "IIC26-0003": {
-        registrationId: "IIC26-0003",
+      "TS26-0003": {
+        registrationId: "TS26-0003",
         name: "Vishnu",
         roll: "2411cs030183",
         year: "3rd Year",
@@ -97,10 +101,24 @@ const DEFAULT_EVENTS = {
   }
 };
 
+function loadEvents() {
+  const saved = localStorage.getItem("vn_events");
+  let events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      events = Object.assign({}, DEFAULT_EVENTS, parsed);
+    } catch (e) {
+      console.warn("Failed to parse saved events:", e);
+    }
+  }
+  return events;
+}
+
 // Application State
 const state = {
   currentUser: null,
-  events: DEFAULT_EVENTS,
+  events: loadEvents(),
   activeEventId: localStorage.getItem("vn_active_event") || "shark_tank",
   apiUrl: "",
   demoDatabase: {},
@@ -190,14 +208,28 @@ const elements = {
   btnOpenSettings: document.getElementById("btnOpenSettings"),
   btnCloseSettings: document.getElementById("btnCloseSettings"),
   settingsModal: document.getElementById("settingsModal"),
+  settingsActiveClubTag: document.getElementById("settingsActiveClubTag"),
   settingsActiveEventName: document.getElementById("settingsActiveEventName"),
   apiUrlInput: document.getElementById("apiUrlInput"),
   eventPrefixInput: document.getElementById("eventPrefixInput"),
+  eventVolunteerPinInput: document.getElementById("eventVolunteerPinInput"),
   eventSubtitleInput: document.getElementById("eventSubtitleInput"),
+  eventArenasInput: document.getElementById("eventArenasInput"),
   audioToggle: document.getElementById("audioToggle"),
   autoResumeToggle: document.getElementById("autoResumeToggle"),
   btnSaveSettings: document.getElementById("btnSaveSettings"),
   btnTestConnection: document.getElementById("btnTestConnection"),
+  tabEventsCount: document.getElementById("tabEventsCount"),
+  newClubSelect: document.getElementById("newClubSelect"),
+  newClubCustomInput: document.getElementById("newClubCustomInput"),
+  newEventNameInput: document.getElementById("newEventNameInput"),
+  newApiUrlInput: document.getElementById("newApiUrlInput"),
+  newPrefixInput: document.getElementById("newPrefixInput"),
+  newVolunteerPinInput: document.getElementById("newVolunteerPinInput"),
+  newArenasInput: document.getElementById("newArenasInput"),
+  btnCreateNewEvent: document.getElementById("btnCreateNewEvent"),
+  manageEventsList: document.getElementById("manageEventsList"),
+  btnOpenAddNewTab: document.getElementById("btnOpenAddNewTab"),
   
   coordinatorLoginModal: document.getElementById("coordinatorLoginModal"),
   btnCloseCoordModal: document.getElementById("btnCloseCoordModal"),
@@ -421,6 +453,7 @@ function initAuth() {
 
       const activeCard = elements.coordSelectionGrid.querySelector(".coord-card.active");
       const coordId = activeCard ? activeCard.dataset.id : "vishnu";
+      updateCoordinatorsList();
       const selected = COORDINATORS[coordId] || COORDINATORS.vishnu;
 
       if (selected.pin && pin !== selected.pin) {
@@ -462,6 +495,31 @@ function initAuth() {
   }
 }
 
+function updateCoordinatorsList() {
+  if (!COORDINATORS.vishnu) {
+    COORDINATORS.vishnu = { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin", pin: "2026", isSuperAdmin: true };
+  }
+  if (!COORDINATORS.nikhil) {
+    COORDINATORS.nikhil = { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations", pin: "2026", isSuperAdmin: true };
+  }
+
+  // Dynamically ensure volunteer profiles exist for all club events
+  Object.keys(state.events).forEach(evId => {
+    const ev = state.events[evId];
+    const coordKey = `volunteer_${evId}`;
+    COORDINATORS[coordKey] = {
+      id: coordKey,
+      name: `${ev.name} Staff`,
+      role: `Event Staff (${ev.club || "Club"})`,
+      avatar: "🎯",
+      badge: `${ev.club || "Event"} Staff`,
+      pin: ev.volunteerPin || "1111",
+      lockedEvent: evId,
+      isSuperAdmin: false
+    };
+  });
+}
+
 function showLoginModal() {
   if (!elements.coordinatorLoginModal) return;
 
@@ -469,8 +527,10 @@ function showLoginModal() {
   const paramCoord = urlParams.get("coord");
   const paramEvent = urlParams.get("event") || state.activeEventId;
 
+  updateCoordinatorsList();
+
   // Determine if this is a restricted volunteer context
-  const isVolunteerParam = paramCoord && (paramCoord === "volunteer_shark" || paramCoord === "volunteer_techno");
+  const isVolunteerParam = paramCoord && paramCoord.startsWith("volunteer_");
   const isVolunteerUser = state.currentUser && !state.currentUser.isSuperAdmin;
   const isVolunteerContext = isVolunteerParam || isVolunteerUser;
 
@@ -478,54 +538,88 @@ function showLoginModal() {
   const modalDesc = elements.coordinatorLoginModal.querySelector(".login-desc");
 
   if (isVolunteerContext) {
-    if (modalTitle) modalTitle.textContent = "Volunteer Staff Checkpoint";
+    const activeEv = state.events[paramEvent] || state.events[state.activeEventId];
+    if (modalTitle) modalTitle.textContent = `${activeEv ? activeEv.name : "Volunteer"} Checkpoint`;
     if (modalDesc) modalDesc.textContent = "Enter your volunteer staff access PIN to operate the scanner.";
   } else {
     if (modalTitle) modalTitle.textContent = "Coordinator Login Portal";
     if (modalDesc) modalDesc.textContent = "Select your coordinator identity to operate the scanner and stamp verified check-ins.";
   }
 
-  // Filter login profile cards
+  // Render cards dynamically
   if (elements.coordSelectionGrid) {
-    const cards = elements.coordSelectionGrid.querySelectorAll(".coord-card");
-    let hasActive = false;
+    let cardsHtml = "";
+    if (!isVolunteerContext) {
+      cardsHtml += `
+        <div class="coord-card active" data-id="vishnu" data-name="Vishnu" data-role="Lead Coordinator">
+          <div class="coord-avatar-large">V</div>
+          <div class="coord-details">
+            <strong>Vishnu</strong>
+            <span class="coord-role-text">Lead Coordinator</span>
+          </div>
+          <span class="coord-pill-tag tag-lead">Super Admin</span>
+        </div>
 
-    cards.forEach(card => {
-      const id = card.dataset.id;
-      let visible = true;
+        <div class="coord-card" data-id="nikhil" data-name="Nikhil" data-role="Arena & Gate Lead">
+          <div class="coord-avatar-large avatar-nikhil">N</div>
+          <div class="coord-details">
+            <strong>Nikhil</strong>
+            <span class="coord-role-text">Arena & Gate Lead</span>
+          </div>
+          <span class="coord-pill-tag tag-ops">Operations</span>
+        </div>
+      `;
+    }
 
-      if (isVolunteerContext) {
-        // Volunteer mode: NEVER show Vishnu or Nikhil!
-        if (id === "vishnu" || id === "nikhil") {
-          visible = false;
-        } else if (paramCoord) {
-          visible = (id === paramCoord);
-        } else if (state.currentUser && state.currentUser.lockedEvent) {
-          visible = (id === (state.currentUser.lockedEvent === "shark_tank" ? "volunteer_shark" : "volunteer_techno"));
-        } else if (paramEvent === "shark_tank") {
-          visible = (id === "volunteer_shark");
-        } else if (paramEvent === "techno_splurge") {
-          visible = (id === "volunteer_techno");
-        }
+    // Determine which volunteer profile(s) to render
+    let targetEventIds = [];
+    if (isVolunteerContext) {
+      if (paramCoord && paramCoord.startsWith("volunteer_")) {
+        const evId = paramCoord.replace("volunteer_", "");
+        if (state.events[evId]) targetEventIds = [evId];
+      } else if (state.currentUser && state.currentUser.lockedEvent && state.events[state.currentUser.lockedEvent]) {
+        targetEventIds = [state.currentUser.lockedEvent];
+      } else if (state.events[paramEvent]) {
+        targetEventIds = [paramEvent];
       } else {
-        // Super Admin mode: show Super Admins and the event volunteer
-        if (paramEvent === "shark_tank") {
-          visible = (id !== "volunteer_techno");
-        } else if (paramEvent === "techno_splurge") {
-          visible = (id !== "volunteer_shark");
-        }
+        targetEventIds = [state.activeEventId];
       }
-
-      card.style.display = visible ? "flex" : "none";
-
-      if (visible && !hasActive) {
-        cards.forEach(c => c.classList.remove("active"));
-        card.classList.add("active");
-        hasActive = true;
+    } else {
+      // Super admin can see current event's volunteer
+      if (state.events[paramEvent]) {
+        targetEventIds = [paramEvent];
+      } else {
+        targetEventIds = Object.keys(state.events);
       }
+    }
+
+    targetEventIds.forEach((evId, idx) => {
+      const ev = state.events[evId];
+      if (!ev) return;
+      const coordKey = `volunteer_${evId}`;
+      const isActive = isVolunteerContext ? (idx === 0) : false;
+      cardsHtml += `
+        <div class="coord-card ${isActive ? 'active' : ''}" data-id="${coordKey}" data-name="${escapeHtml(ev.name)} Staff" data-role="Event Staff">
+          <div class="coord-avatar-large avatar-volunteer" style="background: linear-gradient(135deg, #059669, #10b981);">🎯</div>
+          <div class="coord-details">
+            <strong>Volunteer: ${escapeHtml(ev.name)}</strong>
+            <span class="coord-role-text">${escapeHtml(ev.club || 'Event Staff')} Only</span>
+          </div>
+          <span class="coord-pill-tag tag-lead">Staff Access</span>
+        </div>
+      `;
     });
 
-    // Reset PIN input to empty so user enters their own PIN
+    elements.coordSelectionGrid.innerHTML = cardsHtml;
+
+    elements.coordSelectionGrid.querySelectorAll(".coord-card").forEach(card => {
+      card.addEventListener("click", () => {
+        elements.coordSelectionGrid.querySelectorAll(".coord-card").forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+      });
+    });
+
+    // Reset PIN input
     if (elements.coordPinInput) {
       elements.coordPinInput.value = "";
     }
@@ -565,22 +659,7 @@ function updateCoordinatorUI() {
 
 function initUI() {
   updateConnectionBadge();
-  
-  // Event pills click listeners
-  if (elements.eventPillsGroup) {
-    elements.eventPillsGroup.querySelectorAll(".event-pill").forEach(pill => {
-      pill.addEventListener("click", () => {
-        const evId = pill.dataset.event;
-        if (evId) {
-          switchEvent(evId);
-        }
-      });
-    });
-  }
-
-  if (elements.btnEventConfigModal) {
-    elements.btnEventConfigModal.addEventListener("click", openSettingsForActiveEvent);
-  }
+  renderEventPills();
 
   // Volunteer Share modal handlers
   if (elements.btnShareVolunteer) {
@@ -634,6 +713,34 @@ function initUI() {
       elements.settingsModal.style.display = "none";
     }
   });
+
+  // Modal tab navigation
+  const tabButtons = elements.settingsModal ? elements.settingsModal.querySelectorAll(".modal-tab-btn") : [];
+  tabButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.dataset.tab;
+      switchSettingsTab(tabId);
+    });
+  });
+
+  if (elements.btnOpenAddNewTab) {
+    elements.btnOpenAddNewTab.addEventListener("click", () => switchSettingsTab("tabAddEvent"));
+  }
+
+  // Add new club custom input toggle
+  if (elements.newClubSelect) {
+    elements.newClubSelect.addEventListener("change", (e) => {
+      if (elements.newClubCustomInput) {
+        elements.newClubCustomInput.style.display = e.target.value === "__new__" ? "block" : "none";
+        if (e.target.value === "__new__") elements.newClubCustomInput.focus();
+      }
+    });
+  }
+
+  // Create new event button
+  if (elements.btnCreateNewEvent) {
+    elements.btnCreateNewEvent.addEventListener("click", handleCreateNewEvent);
+  }
 
   elements.btnSaveSettings.addEventListener("click", saveSettings);
   elements.btnTestConnection.addEventListener("click", testConnection);
@@ -1491,16 +1598,267 @@ function exportHistoryCsv() {
 }
 
 // ==============================================================================
-// Multi-Event Settings Modal & Diagnostic Connections
+// Multi-Club & Dynamic Event Management
 // ==============================================================================
+function switchSettingsTab(tabId) {
+  if (!elements.settingsModal) return;
+  elements.settingsModal.querySelectorAll(".modal-tab-btn").forEach(btn => {
+    if (btn.dataset.tab === tabId) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  elements.settingsModal.querySelectorAll(".tab-pane").forEach(pane => {
+    pane.style.display = (pane.id === tabId) ? "flex" : "none";
+  });
+
+  if (tabId === "tabManageEvents") {
+    renderManageEventsList();
+  } else if (tabId === "tabAddEvent") {
+    populateClubSelect();
+  }
+}
+
+function renderEventPills() {
+  if (!elements.eventPillsGroup) return;
+
+  let pillsHtml = "";
+  Object.keys(state.events).forEach(id => {
+    const ev = state.events[id];
+    const isActive = id === state.activeEventId;
+    const badgeText = ev.prefix ? ev.prefix.replace(/[^A-Za-z0-9]/g, "").slice(0, 5) : "EV";
+    const clubShort = ev.club ? ev.club.replace(" Club", "") : "";
+    const displayName = clubShort ? `${clubShort}: ${ev.name}` : ev.name;
+
+    pillsHtml += `
+      <button class="event-pill ${isActive ? 'active' : ''}" data-event="${id}" type="button" title="${escapeHtml(ev.club || '')} — ${escapeHtml(ev.name)}">
+        <span class="pill-dot"></span>
+        <span class="pill-title">${escapeHtml(displayName)}</span>
+        <span class="pill-badge">${escapeHtml(badgeText)}</span>
+      </button>
+    `;
+  });
+
+  pillsHtml += `
+    <button id="btnEventConfigModal" class="event-pill pill-add" type="button" title="Configure Events & Add Google Form Sheets">
+      <span>⚙️ Event Sheets</span>
+    </button>
+  `;
+
+  elements.eventPillsGroup.innerHTML = pillsHtml;
+
+  elements.eventPillsGroup.querySelectorAll(".event-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const evId = pill.dataset.event;
+      if (evId) {
+        switchEvent(evId);
+      }
+    });
+  });
+
+  const btnConfig = document.getElementById("btnEventConfigModal");
+  if (btnConfig) {
+    btnConfig.addEventListener("click", openSettingsForActiveEvent);
+  }
+}
+
+function populateClubSelect() {
+  if (!elements.newClubSelect) return;
+  const clubs = new Set(["Yuktiveda Club", "IIC Club"]);
+  Object.values(state.events).forEach(ev => {
+    if (ev.club) clubs.add(ev.club);
+  });
+
+  let html = "";
+  clubs.forEach(c => {
+    html += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`;
+  });
+  html += `<option value="__new__">➕ Add New Club / Organization...</option>`;
+  elements.newClubSelect.innerHTML = html;
+  if (elements.newClubCustomInput) {
+    elements.newClubCustomInput.style.display = "none";
+    elements.newClubCustomInput.value = "";
+  }
+}
+
+function renderManageEventsList() {
+  if (!elements.manageEventsList) return;
+  const count = Object.keys(state.events).length;
+  if (elements.tabEventsCount) elements.tabEventsCount.textContent = count;
+
+  updateCoordinatorsList();
+
+  let html = "";
+  Object.keys(state.events).forEach(id => {
+    const ev = state.events[id];
+    const isActive = id === state.activeEventId;
+    const hasSheet = !!(ev.apiUrl && ev.apiUrl.startsWith("http"));
+    const coordKey = `volunteer_${id}`;
+    const pin = COORDINATORS[coordKey]?.pin || ev.volunteerPin || "1111";
+
+    html += `
+      <div class="event-manage-item ${isActive ? 'active-event-item' : ''}">
+        <div style="flex: 1; min-width: 0;">
+          <span class="club-badge-tag">${escapeHtml(ev.club || 'Club Event')}</span>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <strong style="color: var(--text-pure); font-size: 0.95rem;">${escapeHtml(ev.name)}</strong>
+            <span class="badge" style="font-size: 0.7rem; padding: 2px 8px;">${escapeHtml(ev.prefix || 'EV-')}</span>
+            ${isActive ? '<span style="font-size: 0.72rem; color: var(--emerald-primary); font-weight: 800;">● ACTIVE</span>' : ''}
+          </div>
+          <div style="display: flex; gap: 12px; font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; flex-wrap: wrap;">
+            <span>Staff PIN: <strong style="color: var(--text-primary); font-family: monospace;">${escapeHtml(pin)}</strong></span>
+            <span>Sheet: <strong style="color: ${hasSheet ? 'var(--emerald-primary)' : 'var(--amber-primary)'};">${hasSheet ? '✓ Live Connected' : '○ Demo / Unlinked'}</strong></span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          ${!isActive ? `<button class="btn-sm btn-switch-to-event" data-id="${id}" type="button">Switch</button>` : ''}
+          ${!ev.isBuiltin ? `<button class="btn-sm btn-delete-event" data-id="${id}" style="color: var(--rose-primary); border-color: var(--border-rose);" type="button" title="Delete Event">✕</button>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  elements.manageEventsList.innerHTML = html;
+
+  elements.manageEventsList.querySelectorAll(".btn-switch-to-event").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.dataset.id;
+      if (targetId) {
+        switchEvent(targetId);
+        openSettingsForActiveEvent();
+      }
+    });
+  });
+
+  elements.manageEventsList.querySelectorAll(".btn-delete-event").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.dataset.id;
+      if (targetId) deleteEvent(targetId);
+    });
+  });
+}
+
+function handleCreateNewEvent() {
+  const isCustomClub = elements.newClubSelect?.value === "__new__";
+  const club = isCustomClub ? (elements.newClubCustomInput?.value.trim() || "") : (elements.newClubSelect?.value || "");
+  const name = elements.newEventNameInput ? elements.newEventNameInput.value.trim() : "";
+  const apiUrl = elements.newApiUrlInput ? elements.newApiUrlInput.value.trim() : "";
+  let prefix = elements.newPrefixInput ? elements.newPrefixInput.value.trim() : "";
+  const pin = elements.newVolunteerPinInput ? elements.newVolunteerPinInput.value.trim() : "3333";
+  const arenasRaw = elements.newArenasInput ? elements.newArenasInput.value.trim() : "";
+
+  if (!club) {
+    alert("Please specify a Parent Club / Organization name.");
+    return;
+  }
+  if (!name) {
+    alert("Please enter an Event Name.");
+    return;
+  }
+
+  if (!prefix) {
+    const letters = name.replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 3) || "EV";
+    prefix = `${letters}26-`;
+  } else if (!prefix.endsWith("-")) {
+    prefix = prefix + "-";
+  }
+
+  const arenas = arenasRaw ? arenasRaw.split(",").map(a => a.trim()).filter(Boolean) : ["General Admission"];
+
+  // Generate unique event ID
+  const baseId = (club.toLowerCase().replace(/[^a-z0-9]/g, "_") + "_" + name.toLowerCase().replace(/[^a-z0-9]/g, "_")).replace(/__+/g, "_").slice(0, 28);
+  let eventId = baseId;
+  let counter = 1;
+  while (state.events[eventId]) {
+    eventId = `${baseId}_${counter++}`;
+  }
+
+  // Create event object
+  state.events[eventId] = {
+    id: eventId,
+    club: club,
+    name: name,
+    brandBadge: `${club.toUpperCase()} • 2026`,
+    brandTitle: club.toUpperCase(),
+    brandSubtitle: `${name.toUpperCase()} CHECK-IN SCANNER`,
+    prefix: prefix,
+    apiUrl: apiUrl,
+    gateLabel: "Main Gate Entry",
+    arenaModeLabel: arenas.length > 1 ? "Arena Attendance" : "Check-In",
+    arenas: arenas,
+    volunteerPin: pin || "1111",
+    isBuiltin: false,
+    demoDatabase: {}
+  };
+
+  updateCoordinatorsList();
+  saveEvents();
+  switchEvent(eventId);
+
+  // Clear inputs
+  if (elements.newEventNameInput) elements.newEventNameInput.value = "";
+  if (elements.newApiUrlInput) elements.newApiUrlInput.value = "";
+  if (elements.newPrefixInput) elements.newPrefixInput.value = "";
+  if (elements.newArenasInput) elements.newArenasInput.value = "";
+
+  switchSettingsTab("tabActiveEvent");
+  openSettingsForActiveEvent();
+
+  alert(`🎉 Event Created Successfully!\n\nClub: ${club}\nEvent: ${name}\nTicket Prefix: ${prefix}\nVolunteer PIN: ${pin}\n\nThe event is now active on your dashboard.`);
+}
+
+function deleteEvent(eventId) {
+  const ev = state.events[eventId];
+  if (!ev) return;
+  if (ev.isBuiltin) {
+    alert("Built-in default events cannot be deleted.");
+    return;
+  }
+  if (confirm(`Are you sure you want to delete '${ev.name}' under '${ev.club}'?`)) {
+    delete state.events[eventId];
+    delete COORDINATORS[`volunteer_${eventId}`];
+    localStorage.removeItem(`ts_history_${eventId}`);
+    localStorage.removeItem(`ts_api_url_${eventId}`);
+
+    if (state.activeEventId === eventId) {
+      const remainingIds = Object.keys(state.events);
+      switchEvent(remainingIds[0] || "shark_tank");
+    }
+
+    saveEvents();
+    renderManageEventsList();
+    alert(`Event '${ev.name}' deleted.`);
+  }
+}
+
+function saveEvents() {
+  localStorage.setItem("vn_events", JSON.stringify(state.events));
+  renderEventPills();
+  renderManageEventsList();
+  populateClubSelect();
+  updateCoordinatorsList();
+}
+
 function openSettingsForActiveEvent() {
   const ev = state.events[state.activeEventId] || DEFAULT_EVENTS.shark_tank;
+  if (elements.settingsActiveClubTag) elements.settingsActiveClubTag.textContent = (ev.club || "Club Event").toUpperCase();
   if (elements.settingsActiveEventName) elements.settingsActiveEventName.textContent = ev.name;
   if (elements.apiUrlInput) elements.apiUrlInput.value = ev.apiUrl || "";
   if (elements.eventPrefixInput) elements.eventPrefixInput.value = ev.prefix || "";
+  if (elements.eventVolunteerPinInput) {
+    const coordKey = `volunteer_${state.activeEventId}`;
+    elements.eventVolunteerPinInput.value = COORDINATORS[coordKey]?.pin || ev.volunteerPin || "1111";
+  }
   if (elements.eventSubtitleInput) elements.eventSubtitleInput.value = ev.brandSubtitle || "";
+  if (elements.eventArenasInput) elements.eventArenasInput.value = (ev.arenas || []).join(", ");
   if (elements.audioToggle) elements.audioToggle.checked = state.audioEnabled;
   if (elements.autoResumeToggle) elements.autoResumeToggle.checked = state.autoResume;
+
+  populateClubSelect();
+  renderManageEventsList();
+  switchSettingsTab("tabActiveEvent");
   elements.settingsModal.style.display = "flex";
 }
 
@@ -1510,8 +1868,27 @@ function saveSettings() {
     ev.apiUrl = elements.apiUrlInput.value.trim();
     ev.prefix = elements.eventPrefixInput.value.trim() || ev.prefix;
     ev.brandSubtitle = elements.eventSubtitleInput.value.trim() || ev.brandSubtitle;
+    
+    if (elements.eventVolunteerPinInput) {
+      const newPin = elements.eventVolunteerPinInput.value.trim();
+      if (newPin) {
+        ev.volunteerPin = newPin;
+        const coordKey = `volunteer_${state.activeEventId}`;
+        if (COORDINATORS[coordKey]) {
+          COORDINATORS[coordKey].pin = newPin;
+        }
+      }
+    }
+
+    if (elements.eventArenasInput) {
+      const arenasRaw = elements.eventArenasInput.value.trim();
+      if (arenasRaw) {
+        ev.arenas = arenasRaw.split(",").map(a => a.trim()).filter(Boolean);
+      }
+    }
+
     localStorage.setItem(`ts_api_url_${state.activeEventId}`, ev.apiUrl);
-    localStorage.setItem("vn_events", JSON.stringify(state.events));
+    saveEvents();
   }
 
   state.audioEnabled = elements.audioToggle.checked;
@@ -1521,7 +1898,7 @@ function saveSettings() {
 
   switchEvent(state.activeEventId);
   elements.settingsModal.style.display = "none";
-  alert(`Settings updated successfully for ${ev ? ev.name : "Event"}!`);
+  alert(`Settings saved successfully for ${ev ? ev.name : "Event"}!`);
 }
 
 async function testConnection() {
@@ -1577,9 +1954,25 @@ function openShareVolunteerModal() {
   if (!elements.shareVolunteerModal) return;
 
   if (elements.shareEventSelect) {
-    elements.shareEventSelect.innerHTML = Object.keys(state.events).map(id => 
-      `<option value="${id}" ${id === state.activeEventId ? 'selected' : ''}>${escapeHtml(state.events[id].name)}</option>`
-    ).join("");
+    // Group events by Club
+    const clubsMap = {};
+    Object.keys(state.events).forEach(id => {
+      const ev = state.events[id];
+      const clubName = ev.club || "Other Events";
+      if (!clubsMap[clubName]) clubsMap[clubName] = [];
+      clubsMap[clubName].push(ev);
+    });
+
+    let selectHtml = "";
+    Object.keys(clubsMap).forEach(clubName => {
+      selectHtml += `<optgroup label="${escapeHtml(clubName)}">`;
+      clubsMap[clubName].forEach(ev => {
+        selectHtml += `<option value="${ev.id}" ${ev.id === state.activeEventId ? 'selected' : ''}>${escapeHtml(ev.name)} (${ev.prefix || 'EV'})</option>`;
+      });
+      selectHtml += `</optgroup>`;
+    });
+
+    elements.shareEventSelect.innerHTML = selectHtml;
   }
 
   populateShareDesks();
@@ -1603,7 +1996,7 @@ function populateShareDesks() {
 function getVolunteerShareLink() {
   const eventId = elements.shareEventSelect ? elements.shareEventSelect.value : state.activeEventId;
   const deskVal = elements.shareDeskSelect ? elements.shareDeskSelect.value : "gate";
-  const coordKey = eventId === "shark_tank" ? "volunteer_shark" : "volunteer_techno";
+  const coordKey = `volunteer_${eventId}`;
   
   const baseUrl = window.location.origin + window.location.pathname;
   const params = new URLSearchParams();
@@ -1646,10 +2039,10 @@ function shareWhatsapp() {
   const ev = state.events[eventId] || state.events[state.activeEventId];
   const link = getVolunteerShareLink();
   const desk = elements.shareDeskSelect ? elements.shareDeskSelect.options[elements.shareDeskSelect.selectedIndex].text : "Check-in Scanner";
-  const coordKey = eventId === "shark_tank" ? "volunteer_shark" : "volunteer_techno";
-  const pin = COORDINATORS[coordKey]?.pin || "1111";
+  const coordKey = `volunteer_${eventId}`;
+  const pin = COORDINATORS[coordKey]?.pin || ev.volunteerPin || "1111";
 
-  const message = `🚨 *${ev.name.toUpperCase()} — VOLUNTEER SCANNER ACCESS* 🚨\n\n` +
+  const message = `🚨 *${(ev.club || "EVENT").toUpperCase()} — ${ev.name.toUpperCase()}* 🚨\n\n` +
     `Hello Team! Here is your live check-in scanner link for *${desk}*:\n\n` +
     `📲 *Open Scanner:* ${link}\n\n` +
     `🔑 *Volunteer PIN:* ${pin}\n\n` +
@@ -1657,8 +2050,9 @@ function shareWhatsapp() {
     `📌 *Instructions:*\n` +
     `1. Tap the link above in Chrome (Android) or Safari (iPhone)\n` +
     `2. Allow camera permission\n` +
-    `3. Start scanning attendee QR codes!\n` +
-    `💡 Tip: Tap 'Add to Home Screen' in browser menu for a full-screen app!`;
+    `3. Enter your PIN: *${pin}*\n` +
+    `4. Scan participant QR codes to mark verified attendance!\n\n` +
+    `⚡ *VN QR Check-in System*`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, "_blank");
 }
