@@ -3,17 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#06080d">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>VN QR SCAN | Event Check-In System</title>
   
-  <!-- Font & Icons -->
+  <!-- Modern Geometric Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   
-  <!-- HTML5 QR Code Library -->
+  <!-- HTML5 QR Code Engine -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   
-  <!-- Canvas Confetti for Celebration on Valid Check-in -->
+  <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   
   <link rel="stylesheet" href="style.css">
@@ -24,18 +26,18 @@
     <!-- Top Navigation / Header -->
     <header class="top-header">
       <div class="brand-block">
-        <div class="brand-badge">VN QR SCAN</div>
+        <div class="brand-badge">VN QR SCAN • 2026</div>
         <h1 class="brand-title">TECHNO SPLURGE</h1>
         <p class="brand-subtitle">GATE ENTRY & ARENA ATTENDANCE SCANNER</p>
       </div>
       
       <div class="header-actions">
-        <div id="connectionStatus" class="connection-status status-demo" title="Connection Mode">
+        <div id="connectionStatus" class="connection-status status-online" title="Connection Mode">
           <span class="status-dot"></span>
-          <span class="status-label">Demo Mode</span>
+          <span class="status-label">Google Sheets Live</span>
         </div>
-        <button id="btnOpenSettings" class="icon-btn" title="API & App Settings" aria-label="Settings">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button id="btnOpenSettings" class="icon-btn" title="API & Scanner Settings" aria-label="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
@@ -43,28 +45,28 @@
       </div>
     </header>
 
-    <!-- Scan Mode Selector Bar (Main Gate Check-in VS Arena Attendance) -->
+    <!-- Scan Mode Selector Bar (Main Gate Entry vs Arena Attendance) -->
     <section class="mode-selector-bar">
       <div class="mode-toggle-group">
-        <button id="modeGateBtn" class="mode-btn active" data-mode="gate">
+        <button id="modeGateBtn" class="mode-btn active" data-mode="gate" type="button">
           <span class="mode-icon">🚪</span>
           <div class="mode-text">
             <strong>Main Event Gate Entry</strong>
-            <small>Entry Status: CHECKED IN</small>
+            <small>Verify Entry & Mark Checked In</small>
           </div>
         </button>
-        <button id="modeArenaBtn" class="mode-btn" data-mode="arena">
+        <button id="modeArenaBtn" class="mode-btn" data-mode="arena" type="button">
           <span class="mode-icon">🎯</span>
           <div class="mode-text">
             <strong>Arena Attendance</strong>
-            <small>Mark Activity Present</small>
+            <small>Verify Selection & Mark Present</small>
           </div>
         </button>
       </div>
 
-      <!-- Activity Selector (Visible when Arena mode active) -->
+      <!-- Activity Selector Dropdown -->
       <div id="arenaDropdownWrap" class="arena-dropdown-wrap" style="display: none;">
-        <label for="activeArenaSelect">Select Arena Desk:</label>
+        <label for="activeArenaSelect">Active Arena Desk:</label>
         <select id="activeArenaSelect" class="form-select font-bold">
           <option value="CEO for 10 Minutes">1. CEO for 10 Minutes</option>
           <option value="Tech Parody">2. Tech Parody</option>
@@ -77,15 +79,15 @@
     <!-- Quick Stats Bar -->
     <section class="stats-bar">
       <div class="stat-card">
-        <span class="stat-label">TOTAL REGISTERED</span>
+        <span class="stat-label">Total Registered</span>
         <span id="statTotal" class="stat-value">0</span>
       </div>
       <div class="stat-card stat-checked">
-        <span class="stat-label" id="statCheckedLabel">GATE CHECKED IN</span>
+        <span class="stat-label" id="statCheckedLabel">Gate Checked In</span>
         <span id="statCheckedIn" class="stat-value">0</span>
       </div>
       <div class="stat-card stat-pending">
-        <span class="stat-label">PENDING</span>
+        <span class="stat-label">Pending</span>
         <span id="statPending" class="stat-value">0</span>
       </div>
     </section>
@@ -99,11 +101,11 @@
           <div class="card-header">
             <div class="card-title-group">
               <h2 class="card-title" id="scannerTitle">Main Gate Scanner</h2>
-              <p class="card-hint" id="scannerHint">Point camera at the ticket QR code</p>
+              <p class="card-hint" id="scannerHint">Point camera directly at the participant ticket QR code</p>
             </div>
             <div class="scanner-controls-top">
-              <button id="btnSwitchCamera" class="btn-sm btn-ghost" title="Switch Front/Back Camera">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <button id="btnSwitchCamera" class="btn-sm" title="Switch Front/Back Camera" type="button">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M23 4v6h-6"></path>
                   <path d="M1 20v-6h6"></path>
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
@@ -127,19 +129,19 @@
             </div>
             <div id="cameraLoading" class="camera-loading">
               <div class="spinner"></div>
-              <span>Starting Camera...</span>
+              <span>Initializing Camera Stream...</span>
             </div>
           </div>
 
-          <!-- Camera Buttons & File Upload Option -->
+          <!-- Controls & Manual Fallback -->
           <div class="scanner-footer">
             <div class="scanner-btn-group">
-              <button id="btnToggleScan" class="btn btn-primary">
+              <button id="btnToggleScan" class="btn btn-primary" type="button">
                 <span id="scanBtnIcon">⏸</span>
                 <span id="scanBtnText">Pause Scanner</span>
               </button>
-              <label for="qrFileInput" class="btn btn-outline" title="Upload QR image file or screenshot">
-                📁 Scan Image File
+              <label for="qrFileInput" class="btn btn-outline" title="Upload ticket QR image file">
+                📁 Upload QR Image
                 <input type="file" id="qrFileInput" accept="image/*" style="display: none;">
               </label>
             </div>
@@ -150,7 +152,7 @@
                 <input 
                   type="text" 
                   id="manualRegId" 
-                  placeholder="Or enter Registration ID (e.g. TS26-0003)" 
+                  placeholder="Or enter Registration ID (e.g. TS26-0001)" 
                   autocomplete="off" 
                   spellcheck="false"
                   required
@@ -171,32 +173,32 @@
           <!-- Idle / Ready State -->
           <div id="stateIdle" class="result-empty">
             <div class="empty-icon-shield">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 <path d="m9 12 2 2 4-4"></path>
               </svg>
             </div>
-            <h3>Ready to Scan</h3>
-            <p>Scan a participant's QR code or enter their ID to verify attendance and update your Google Sheet.</p>
+            <h3>Scanner Ready</h3>
+            <p>Scan a ticket QR code or enter a Registration ID to instantly verify participant details and record attendance.</p>
             <div class="sample-chip-group">
               <span class="sample-label">Quick test IDs:</span>
-              <button class="chip-btn" data-id="TS26-0001">TS26-0001 (Live Google Sheet)</button>
-              <button class="chip-btn" data-id="TS26-0003">TS26-0003 (Vishnu)</button>
-              <button class="chip-btn" data-id="TS26-9999">Invalid ID</button>
+              <button class="chip-btn" data-id="TS26-0001" type="button">TS26-0001 (Sai Nikhil)</button>
+              <button class="chip-btn" data-id="TS26-0003" type="button">TS26-0003 (Vishnu)</button>
+              <button class="chip-btn" data-id="TS26-9999" type="button">TS26-9999 (Invalid)</button>
             </div>
           </div>
 
           <!-- Loading State -->
           <div id="stateLoading" class="result-loading" style="display: none;">
             <div class="spinner-large"></div>
-            <h3>Verifying with Google Sheet...</h3>
-            <p id="loadingRegId" class="mono-badge">TS26-0003</p>
+            <h3>Verifying with Google Sheets...</h3>
+            <p id="loadingRegId" class="mono-badge">TS26-0001</p>
           </div>
 
           <!-- Content / Verified / Warning State -->
           <div id="stateResult" class="result-content" style="display: none;">
             
-            <!-- Result Banner (Green / Yellow / Red) -->
+            <!-- Result Status Banner -->
             <div id="resultBanner" class="result-banner banner-success">
               <div class="banner-icon-wrap" id="bannerIcon">✓</div>
               <div class="banner-text-wrap">
@@ -206,12 +208,12 @@
               <span id="bannerTimestamp" class="banner-time">18:02:15</span>
             </div>
 
-            <!-- Participant Ticket Details Box -->
+            <!-- Participant Ticket Details Credential Box -->
             <div class="ticket-details-box">
               <div class="ticket-header">
                 <div class="ticket-title-group">
                   <span class="ticket-event-tag">TECHNO SPLURGE 2026</span>
-                  <div class="ticket-reg-id" id="displayRegId">TS26-0003</div>
+                  <div class="ticket-reg-id" id="displayRegId">TS26-0001</div>
                 </div>
                 <div class="payment-badge" id="displayPaymentBadge">₹119 • VERIFIED</div>
               </div>
@@ -220,21 +222,21 @@
               <div class="participant-grid">
                 <div class="info-group full-width">
                   <label>PARTICIPANT NAME</label>
-                  <div class="info-val info-name" id="displayName">Vishnu</div>
+                  <div class="info-val info-name" id="displayName">Sai Nikhil</div>
                 </div>
                 <div class="info-group">
                   <label>ROLL NUMBER</label>
-                  <div class="info-val font-mono" id="displayRoll">2411cs030183</div>
+                  <div class="info-val font-mono" id="displayRoll">2411CS030059</div>
                 </div>
                 <div class="info-group">
                   <label>YEAR & SECTION</label>
-                  <div class="info-val" id="displayYearSec">3rd Year • Gamma</div>
+                  <div class="info-val" id="displayYearSec">3rd Year • Alpha</div>
                 </div>
               </div>
 
               <!-- Arenas Section -->
               <div class="arenas-section">
-                <label class="arenas-label">SELECTED ARENAS (EXACTLY 3)</label>
+                <label class="arenas-label">SELECTED ARENAS (3 MANDATORY)</label>
                 <div class="arenas-list" id="displayArenas">
                   <div class="arena-item">
                     <span class="arena-num">1</span>
@@ -266,7 +268,7 @@
 
             <!-- Action Controls After Scan -->
             <div class="result-actions">
-              <button id="btnNextScan" class="btn btn-primary btn-block">
+              <button id="btnNextScan" class="btn btn-primary btn-block" type="button">
                 <span>Scan Next Participant</span>
                 <span class="kbd-hint">Space / Enter</span>
               </button>
@@ -290,8 +292,8 @@
           </div>
           <div class="history-actions">
             <input type="text" id="historySearch" placeholder="Filter by name, roll no, or ID..." class="history-filter-input">
-            <button id="btnExportCsv" class="btn-sm btn-outline">Export CSV</button>
-            <button id="btnClearHistory" class="btn-sm btn-ghost">Clear Log</button>
+            <button id="btnExportCsv" class="btn-sm" type="button">Export CSV</button>
+            <button id="btnClearHistory" class="btn-sm" type="button">Clear Log</button>
           </div>
         </div>
 
@@ -324,7 +326,7 @@
       <div class="modal-card">
         <div class="modal-header">
           <h3>Scanner & Google Sheets Settings</h3>
-          <button id="btnCloseSettings" class="icon-btn">&times;</button>
+          <button id="btnCloseSettings" class="icon-btn" type="button">&times;</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -336,14 +338,14 @@
               class="form-control font-mono"
             >
             <small class="form-hint">
-              Deploy your Apps Script as a Web App (Access: "Anyone"), then paste the exec URL here. Leave empty to use local Demo Mode.
+              Connected to your Google Apps Script Web App endpoint.
             </small>
           </div>
 
           <div class="form-group checkbox-group">
             <label class="switch-label">
               <input type="checkbox" id="audioToggle" checked>
-              <span>Audio alerts & sound effects (Success chime / Warning buzzer)</span>
+              <span>Audio alerts & sound effects (Success chime / Alert buzzer)</span>
             </label>
           </div>
 
@@ -355,19 +357,17 @@
           </div>
 
           <div class="modal-info-box">
-            <h4>💡 Setup Guide:</h4>
+            <h4>💡 Setup & Synchronization:</h4>
             <ol>
-              <li>Open your Google Sheet (Form Responses 1).</li>
-              <li>Go to <code>Extensions</code> &gt; <code>Apps Script</code>.</li>
-              <li>Replace or update the code with the contents of <code>GoogleAppsScript_Backend.gs</code>.</li>
-              <li>Click <code>Deploy</code> &gt; <code>New deployment</code> &gt; Web app (Who has access: <strong>Anyone</strong>).</li>
-              <li>Copy and paste the Web App URL into the box above and click Save.</li>
+              <li>The scanner communicates directly with your Google Sheet (Form Responses 1).</li>
+              <li>Main Gate mode writes <code>CHECKED IN</code> and entry timestamp.</li>
+              <li>Arena mode verifies selection and writes <code>PRESENT</code> in the respective arena column.</li>
             </ol>
           </div>
         </div>
         <div class="modal-footer">
-          <button id="btnTestConnection" class="btn btn-secondary">Test Connection</button>
-          <button id="btnSaveSettings" class="btn btn-primary">Save Settings</button>
+          <button id="btnTestConnection" class="btn btn-secondary" type="button">Test Connection</button>
+          <button id="btnSaveSettings" class="btn btn-primary" type="button">Save Settings</button>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 /**
  * ==============================================================================
- * TECHNO SPLURGE 2026 - EVENT GATE & ARENA ATTENDANCE SCANNER
- * MALLA REDDY UNIVERSITY
+ * ANTIGRAVITY CONTROLLER — VN QR SCAN 2026
+ * TECHNO SPLURGE GATE & ARENA ATTENDANCE SYSTEM
  * ==============================================================================
  */
 
@@ -11,7 +11,7 @@ const state = {
   audioEnabled: localStorage.getItem("ts_audio") !== "false",
   autoResume: localStorage.getItem("ts_autoresume") !== "false",
   
-  // Mode: "gate" (Main Event Gate Entry) or "arena" (Specific Arena Attendance)
+  // Active Mode: "gate" (Main Event Gate Entry) or "arena" (Arena Attendance)
   currentMode: "gate",
   activeArena: "CEO for 10 Minutes",
   
@@ -26,19 +26,32 @@ const state = {
   
   history: JSON.parse(localStorage.getItem("ts_history") || "[]"),
   
-  // Demo Mode in-memory database (matches exact ticket structure from Google Sheet)
+  // Local fallback test records (matches exact ticket structure from Google Sheet)
   demoDatabase: {
+    "TS26-0001": {
+      registrationId: "TS26-0001",
+      name: "Sai Nikhil",
+      roll: "2411CS030059",
+      email: "sainikhil@example.com",
+      phone: "6300725603",
+      year: "3rd Year",
+      section: "Alpha",
+      activities: "CEO for 10 Minutes, Tech Parody, Open Mic",
+      arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic"],
+      paymentStatus: "VERIFIED",
+      entryStatus: "NOT CHECKED IN",
+      entryTime: "",
+      arenaAttendance: {}
+    },
     "TS26-0003": {
-      regId: "TS26-0003",
+      registrationId: "TS26-0003",
       name: "Vishnu",
-      rollNo: "2411cs030183",
+      roll: "2411cs030183",
       email: "vishnu@example.com",
       phone: "9876543210",
       year: "3rd Year",
       section: "Gamma",
-      arena1: "CEO for 10 Minutes",
-      arena2: "Tech Parody",
-      arena3: "Open Mic",
+      activities: "CEO for 10 Minutes, Tech Parody, Open Mic",
       arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic"],
       paymentStatus: "VERIFIED",
       entryStatus: "NOT CHECKED IN",
@@ -46,55 +59,19 @@ const state = {
       arenaAttendance: {}
     },
     "TS26-0004": {
-      regId: "TS26-0004",
-      name: "Sai Nikhil",
-      rollNo: "2411cs030190",
-      email: "sainikhil@example.com",
+      registrationId: "TS26-0004",
+      name: "Ananya Sharma",
+      roll: "2411CS030045",
+      email: "ananya@example.com",
       phone: "9876543211",
-      year: "3rd Year",
-      section: "Alpha",
-      arena1: "Tech Parody",
-      arena2: "Open Mic",
-      arena3: "Meme War",
+      year: "2nd Year",
+      section: "Beta",
+      activities: "Tech Parody, Open Mic, Meme War",
       arenas: ["Tech Parody", "Open Mic", "Meme War"],
       paymentStatus: "VERIFIED",
       entryStatus: "CHECKED IN",
       entryTime: "2026-09-07 17:15:00",
       arenaAttendance: { "Tech Parody": "PRESENT" }
-    },
-    "TS26-0005": {
-      regId: "TS26-0005",
-      name: "Ananya Sharma",
-      rollNo: "2411cs030045",
-      email: "ananya@example.com",
-      phone: "9876543212",
-      year: "2nd Year",
-      section: "Beta",
-      arena1: "CEO for 10 Minutes",
-      arena2: "Open Mic",
-      arena3: "Meme War",
-      arenas: ["CEO for 10 Minutes", "Open Mic", "Meme War"],
-      paymentStatus: "VERIFIED",
-      entryStatus: "NOT CHECKED IN",
-      entryTime: "",
-      arenaAttendance: {}
-    },
-    "TS26-0006": {
-      regId: "TS26-0006",
-      name: "Rahul Verma",
-      rollNo: "2411cs030210",
-      email: "rahul@example.com",
-      phone: "9876543213",
-      year: "4th Year",
-      section: "Delta",
-      arena1: "CEO for 10 Minutes",
-      arena2: "Tech Parody",
-      arena3: "Meme War",
-      arenas: ["CEO for 10 Minutes", "Tech Parody", "Meme War"],
-      paymentStatus: "PENDING",
-      entryStatus: "NOT CHECKED IN",
-      entryTime: "",
-      arenaAttendance: {}
     }
   }
 };
@@ -165,7 +142,7 @@ const elements = {
 };
 
 // ==============================================================================
-// Web Audio Synthesizer (Instant feedback without external audio files)
+// High-Fidelity Audio Synthesizer (Studio Quality Acoustic Feedback)
 // ==============================================================================
 const SoundFX = {
   ctx: null,
@@ -181,28 +158,25 @@ const SoundFX = {
     if (this.ctx.state === "suspended") this.ctx.resume();
 
     const now = this.ctx.currentTime;
-    // Two-tone rising major chime (D5 -> A5)
-    const osc1 = this.ctx.createOscillator();
-    const gain1 = this.ctx.createGain();
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(587.33, now);
-    gain1.gain.setValueAtTime(0.2, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-    osc1.connect(gain1);
-    gain1.connect(this.ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.18);
+    // Harmonic Major 9th Chord (E5 -> B5 -> G#6 shimmer)
+    const tones = [
+      { freq: 659.25, start: 0, dur: 0.22, gain: 0.18 },
+      { freq: 987.77, start: 0.08, dur: 0.35, gain: 0.22 },
+      { freq: 1661.22, start: 0.16, dur: 0.45, gain: 0.14 }
+    ];
 
-    const osc2 = this.ctx.createOscillator();
-    const gain2 = this.ctx.createGain();
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(880, now + 0.12);
-    gain2.gain.setValueAtTime(0.25, now + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-    osc2.connect(gain2);
-    gain2.connect(this.ctx.destination);
-    osc2.start(now + 0.12);
-    osc2.stop(now + 0.45);
+    tones.forEach(t => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(t.freq, now + t.start);
+      gain.gain.setValueAtTime(t.gain, now + t.start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t.start + t.dur);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + t.start);
+      osc.stop(now + t.start + t.dur);
+    });
   },
   playWarning() {
     if (!state.audioEnabled) return;
@@ -211,17 +185,18 @@ const SoundFX = {
     if (this.ctx.state === "suspended") this.ctx.resume();
 
     const now = this.ctx.currentTime;
-    [0, 0.18].forEach(delay => {
+    // Velvet Dual Pulse (Soft amber alert)
+    [0, 0.16].forEach(delay => {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = "triangle";
-      osc.frequency.setValueAtTime(440, now + delay);
-      gain.gain.setValueAtTime(0.3, now + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.12);
+      osc.frequency.setValueAtTime(466.16, now + delay); // Bb4
+      gain.gain.setValueAtTime(0.25, now + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.14);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start(now + delay);
-      osc.stop(now + delay + 0.12);
+      osc.stop(now + delay + 0.14);
     });
   },
   playError() {
@@ -234,19 +209,19 @@ const SoundFX = {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.linearRampToValueAtTime(80, now + 0.35);
-    gain.gain.setValueAtTime(0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.32);
+    gain.gain.setValueAtTime(0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.35);
+    osc.stop(now + 0.32);
   }
 };
 
 // ==============================================================================
-// Initialization
+// App Initialization
 // ==============================================================================
 document.addEventListener("DOMContentLoaded", () => {
   initUI();
@@ -254,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateStats();
   renderHistory();
   
-  // Keyboard shortcut (Space to scan next)
+  // Spacebar quick-reset shortcut
   window.addEventListener("keydown", (e) => {
     if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT") {
       e.preventDefault();
@@ -315,7 +290,7 @@ function initUI() {
   elements.btnExportCsv.addEventListener("click", exportHistoryCsv);
   elements.btnClearHistory.addEventListener("click", clearHistory);
 
-  // Sample ID chips
+  // Quick test ID buttons
   document.querySelectorAll(".chip-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-id");
@@ -331,8 +306,8 @@ function switchMode(mode) {
     elements.modeArenaBtn.classList.remove("active");
     elements.arenaDropdownWrap.style.display = "none";
     elements.scannerTitle.textContent = "Main Gate Scanner";
-    elements.scannerHint.textContent = "Verifying Entry Status (CHECKED IN)";
-    elements.statCheckedLabel.textContent = "GATE CHECKED IN";
+    elements.scannerHint.textContent = "Point camera directly at the participant ticket QR code";
+    elements.statCheckedLabel.textContent = "Gate Checked In";
   } else {
     elements.modeGateBtn.classList.remove("active");
     elements.modeArenaBtn.classList.add("active");
@@ -340,7 +315,7 @@ function switchMode(mode) {
     state.activeArena = elements.activeArenaSelect.value;
     elements.scannerTitle.textContent = "Arena Attendance: " + state.activeArena;
     elements.scannerHint.textContent = "Checking arena registration & marking PRESENT";
-    elements.statCheckedLabel.textContent = "ARENA ATTENDEES";
+    elements.statCheckedLabel.textContent = "Arena Attendees";
   }
   updateStats();
   resetToIdle();
@@ -364,7 +339,7 @@ function updateConnectionBadge() {
 }
 
 // ==============================================================================
-// QR Scanner Core (html5-qrcode)
+// QR Scanner Engine (html5-qrcode)
 // ==============================================================================
 async function initScanner() {
   elements.cameraLoading.style.display = "flex";
@@ -381,7 +356,7 @@ async function initScanner() {
       state.currentCameraId = backCam ? backCam.id : devices[0].id;
     }
   } catch (err) {
-    console.warn("Could not query camera devices directly:", err);
+    console.warn("Could not list camera devices:", err);
   }
 
   state.html5QrCode = new Html5Qrcode("qr-reader");
@@ -393,7 +368,7 @@ function startCamera() {
   
   const qrConfig = {
     fps: 15,
-    qrbox: { width: 250, height: 250 },
+    qrbox: { width: 240, height: 240 },
     aspectRatio: 1.0
   };
 
@@ -414,9 +389,9 @@ function startCamera() {
   }).catch(err => {
     console.error("Camera start failed:", err);
     elements.cameraLoading.innerHTML = `
-      <div style="color: #ef4444; font-weight: 600;">Camera Access Denied or Unavailable</div>
-      <p style="font-size: 0.8rem; text-align: center; padding: 0 20px;">
-        Use manual ID entry below or click "Scan Image File" to upload ticket QR.
+      <div style="color: #f43f5e; font-weight: 700; font-size: 0.95rem;">Camera Stream Paused</div>
+      <p style="font-size: 0.8rem; text-align: center; padding: 0 20px; color: #94a3b8;">
+        Use manual Registration ID entry below or click "Upload QR Image".
       </p>
     `;
     updateScanButtonUI(false);
@@ -474,13 +449,14 @@ function onScanSuccess(decodedText) {
 }
 
 function onScanFailure(error) {
-  // Silent ignore non-detection frames
+  // Silent frame non-detections
 }
 
 function extractRegId(text) {
   if (!text) return null;
   const clean = text.trim();
 
+  // Pattern: TS26-XXXX
   const tsMatch = clean.match(/TS26-[A-Za-z0-9]+/i);
   if (tsMatch) return tsMatch[0].toUpperCase();
 
@@ -505,13 +481,13 @@ async function handleFileUpload(e) {
     elements.stateIdle.style.display = "none";
     elements.stateResult.style.display = "none";
     elements.stateLoading.style.display = "flex";
-    elements.loadingRegId.textContent = "Scanning image file...";
+    elements.loadingRegId.textContent = "Analyzing QR Image...";
 
     const decodedText = await state.html5QrCode.scanFile(file, true);
     const regId = extractRegId(decodedText);
     handleRegistrationCode(regId);
   } catch (err) {
-    alert("Could not detect a valid QR code in this image. Please try another image or enter the ID manually.");
+    alert("Could not detect a QR code in this image. Please try another image or enter the ID manually.");
     resetToIdle();
   } finally {
     elements.qrFileInput.value = "";
@@ -519,7 +495,7 @@ async function handleFileUpload(e) {
 }
 
 // ==============================================================================
-// Verification & Check-in Logic
+// Verification & Check-in Execution
 // ==============================================================================
 async function handleRegistrationCode(rawId) {
   if (state.isProcessingScan) return;
@@ -587,12 +563,11 @@ function checkinViaDemoDatabase(regId) {
           success: false,
           status: "NOT_FOUND",
           regId: regId,
-          message: "Registration ID not found in sheet."
+          message: "Registration ID not found in records."
         });
         return;
       }
 
-      // Payment check
       if (record.paymentStatus && record.paymentStatus.toUpperCase() !== "VERIFIED") {
         resolve({
           success: false,
@@ -604,7 +579,7 @@ function checkinViaDemoDatabase(regId) {
         return;
       }
 
-      // MODE 1: MAIN GATE CHECK-IN
+      // GATE CHECK-IN
       if (state.currentMode === "gate") {
         if (record.entryStatus === "CHECKED IN") {
           resolve({
@@ -632,23 +607,21 @@ function checkinViaDemoDatabase(regId) {
         return;
       }
 
-      // MODE 2: ARENA ATTENDANCE CHECK-IN
+      // ARENA ATTENDANCE
       if (state.currentMode === "arena") {
         const arena = state.activeArena;
 
-        // Must check in at gate first
         if (record.entryStatus !== "CHECKED IN") {
           resolve({
             success: false,
             status: "NOT_CHECKED_IN_GATE",
             regId: regId,
             participant: record,
-            message: "Participant must CHECK IN at the main event entry gate first!"
+            message: "Participant must CHECK IN at the main gate first!"
           });
           return;
         }
 
-        // Must have selected this arena
         const hasArena = (record.arenas || []).some(a => a.toLowerCase() === arena.toLowerCase());
         if (!hasArena) {
           resolve({
@@ -656,12 +629,11 @@ function checkinViaDemoDatabase(regId) {
             status: "ACTIVITY_NOT_SELECTED",
             regId: regId,
             participant: record,
-            message: `Participant did NOT register for ${arena}.\nRegistered Arenas: ${(record.arenas || []).join(", ")}`
+            message: `Participant did not register for ${arena}.\nAllowed: ${(record.arenas || []).join(", ")}`
           });
           return;
         }
 
-        // Duplicate attendance check
         if (record.arenaAttendance && record.arenaAttendance[arena] === "PRESENT") {
           resolve({
             success: false,
@@ -673,7 +645,6 @@ function checkinViaDemoDatabase(regId) {
           return;
         }
 
-        // Mark Present
         if (!record.arenaAttendance) record.arenaAttendance = {};
         record.arenaAttendance[arena] = "PRESENT";
 
@@ -689,12 +660,12 @@ function checkinViaDemoDatabase(regId) {
         return;
       }
 
-    }, 450);
+    }, 400);
   });
 }
 
 // ==============================================================================
-// Render Result & Audio/Visual Effects
+// Result Presentation & State Styling
 // ==============================================================================
 function displayScanResult(result) {
   elements.stateLoading.style.display = "none";
@@ -705,7 +676,7 @@ function displayScanResult(result) {
 
   const p = result.participant || {
     regId: result.regId,
-    name: "Unregistered / Unknown",
+    name: "Unregistered",
     rollNo: "—",
     year: "—",
     section: "—",
@@ -722,7 +693,7 @@ function displayScanResult(result) {
   const yearSec = `${p.year || "Year"} • ${p.section || "Section"}`;
   const paymentStatus = p.paymentStatus || "VERIFIED";
 
-  // Parse activities whether array or comma-separated string with emojis
+  // Parse arenas list cleanly
   let arenasList = [];
   if (Array.isArray(p.arenas) && p.arenas.length) {
     arenasList = p.arenas;
@@ -738,12 +709,12 @@ function displayScanResult(result) {
   elements.displayYearSec.textContent = yearSec;
   elements.displayPaymentBadge.textContent = paymentStatus;
 
-  // Render Arenas (highlighting current arena if in arena mode)
+  // Render Arenas with highlight on active arena
   elements.displayArenas.innerHTML = arenasList.map((arena, idx) => {
     const isCurrentActive = state.currentMode === "arena" && arena.toLowerCase().includes(state.activeArena.toLowerCase());
     return `
-      <div class="arena-item" style="${isCurrentActive ? 'border: 1px solid #00f0ff; background: rgba(6, 182, 212, 0.15);' : ''}">
-        <span class="arena-num" style="${isCurrentActive ? 'background: #00f0ff; color: #000;' : ''}">${idx + 1}</span>
+      <div class="arena-item" style="${isCurrentActive ? 'border: 1px solid var(--border-brand); background: var(--brand-subtle);' : ''}">
+        <span class="arena-num" style="${isCurrentActive ? 'background: var(--brand-primary); color: #fff;' : ''}">${idx + 1}</span>
         <span class="arena-name">${escapeHtml(arena)} ${isCurrentActive ? '★ (Active Desk)' : ''}</span>
       </div>
     `;
@@ -765,7 +736,7 @@ function displayScanResult(result) {
       elements.displayCheckinStatus.textContent = `PRESENT (${state.activeArena})`;
     }
     
-    elements.displayCheckinStatus.style.color = "#34d399";
+    elements.displayCheckinStatus.style.color = "var(--emerald-main)";
     elements.displayCheckinTime.textContent = result.checkedInAt || formatCurrentTimestamp();
 
     SoundFX.playSuccess();
@@ -773,9 +744,9 @@ function displayScanResult(result) {
     addHistoryRecord({
       time: nowTime,
       mode: state.currentMode === "gate" ? "Main Gate" : state.activeArena,
-      regId: p.regId,
-      name: p.name,
-      rollNo: p.rollNo,
+      regId: regId,
+      name: name,
+      rollNo: rollNo,
       section: p.section,
       arenas: arenasList.join(", "),
       status: state.currentMode === "gate" ? "CHECKED IN" : "PRESENT",
@@ -790,16 +761,16 @@ function displayScanResult(result) {
     elements.bannerSubtitle.textContent = result.message || `Scanned earlier at ${result.checkedInAt || "Earlier"}`;
     
     elements.displayCheckinStatus.textContent = `DUPLICATE (${result.checkedInAt || "Earlier"})`;
-    elements.displayCheckinStatus.style.color = "#fbbf24";
+    elements.displayCheckinStatus.style.color = "var(--amber-main)";
     elements.displayCheckinTime.textContent = result.checkedInAt || "Earlier";
 
     SoundFX.playWarning();
     addHistoryRecord({
       time: nowTime,
       mode: state.currentMode === "gate" ? "Main Gate" : state.activeArena,
-      regId: p.regId,
-      name: p.name,
-      rollNo: p.rollNo,
+      regId: regId,
+      name: name,
+      rollNo: rollNo,
       section: p.section,
       arenas: arenasList.join(", "),
       status: "DUPLICATE SCAN",
@@ -814,16 +785,16 @@ function displayScanResult(result) {
     elements.bannerSubtitle.textContent = result.message || "Participant verification failed.";
     
     elements.displayCheckinStatus.textContent = "DENIED";
-    elements.displayCheckinStatus.style.color = "#f87171";
+    elements.displayCheckinStatus.style.color = "var(--rose-main)";
     elements.displayCheckinTime.textContent = "—";
 
     SoundFX.playError();
     addHistoryRecord({
       time: nowTime,
       mode: state.currentMode === "gate" ? "Main Gate" : state.activeArena,
-      regId: result.regId,
-      name: p.name || "Unknown",
-      rollNo: p.rollNo || "—",
+      regId: regId,
+      name: name || "Unknown",
+      rollNo: rollNo || "—",
       section: p.section || "—",
       arenas: arenasList.join(", ") || "—",
       status: result.status === "ACTIVITY_NOT_SELECTED" ? "WRONG ARENA" : (result.status === "NOT_CHECKED_IN_GATE" ? "NOT AT GATE" : "REJECTED"),
@@ -836,7 +807,7 @@ function displayScanResult(result) {
   if (state.autoResume) {
     state.autoResumeTimeout = setTimeout(() => {
       resetToIdle();
-    }, 4500);
+    }, 3800);
   }
 }
 
@@ -854,21 +825,18 @@ function resetToIdle() {
 function triggerConfetti() {
   if (typeof confetti === "function") {
     confetti({
-      particleCount: 45,
+      particleCount: 40,
       spread: 60,
-      origin: { y: 0.7 },
-      colors: ["#00f0ff", "#3b82f6", "#10b981", "#ffffff"]
+      origin: { y: 0.72 },
+      colors: ["#6366f1", "#818cf8", "#10b981", "#f8fafc", "#a5b4fc"]
     });
   }
 }
 
 // ==============================================================================
-// Stats & History
+// Metrics & Log Management
 // ==============================================================================
 function updateStats() {
-  let total = 0;
-  let checkedIn = 0;
-
   if (state.apiUrl && state.apiUrl.startsWith("http")) {
     fetch(`${state.apiUrl}?action=stats`)
       .then(res => res.json())
@@ -886,7 +854,8 @@ function updateStats() {
       .catch(err => console.warn("Failed to fetch live stats:", err));
   } else {
     const records = Object.values(state.demoDatabase);
-    total = records.length;
+    const total = records.length;
+    let checkedIn = 0;
     if (state.currentMode === "gate") {
       checkedIn = records.filter(r => r.entryStatus === "CHECKED IN").length;
     } else {
@@ -900,7 +869,7 @@ function updateStats() {
 
 function addHistoryRecord(record) {
   state.history.unshift(record);
-  if (state.history.length > 200) state.history.pop();
+  if (state.history.length > 250) state.history.pop();
   localStorage.setItem("ts_history", JSON.stringify(state.history));
   renderHistory();
 }
@@ -922,7 +891,7 @@ function renderHistory(filterText = "") {
   if (!filtered.length) {
     elements.historyTableBody.innerHTML = `
       <tr class="empty-row">
-        <td colspan="8">${q ? "No check-ins match your search." : "No participants scanned yet. Scanned entries will appear here in real time."}</td>
+        <td colspan="8">${q ? "No check-ins match your search filter." : "No participants scanned yet. Scanned records will appear here in real time."}</td>
       </tr>
     `;
     return;
@@ -931,12 +900,12 @@ function renderHistory(filterText = "") {
   elements.historyTableBody.innerHTML = filtered.map(item => `
     <tr>
       <td class="font-mono">${escapeHtml(item.time)}</td>
-      <td><span class="badge" style="background: rgba(6, 182, 212, 0.1); color: #38bdf8;">${escapeHtml(item.mode || "Gate")}</span></td>
+      <td><span class="badge" style="background: var(--brand-subtle); color: var(--brand-light); border-color: var(--border-brand);">${escapeHtml(item.mode || "Gate")}</span></td>
       <td class="font-mono font-bold">${escapeHtml(item.regId)}</td>
       <td><strong>${escapeHtml(item.name)}</strong></td>
       <td class="font-mono">${escapeHtml(item.rollNo)}</td>
       <td>${escapeHtml(item.section)}</td>
-      <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.arenas)}">${escapeHtml(item.arenas)}</td>
+      <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.arenas)}">${escapeHtml(item.arenas)}</td>
       <td><span class="status-tag ${item.statusClass}">${escapeHtml(item.status)}</span></td>
     </tr>
   `).join("");
@@ -976,14 +945,14 @@ function exportHistoryCsv() {
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `Techno_Splurge_Checkins_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute("download", `VN_QR_Scan_Checkins_${new Date().toISOString().slice(0, 10)}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
 
 // ==============================================================================
-// Settings & Helpers
+// Settings Modal & Diagnostic Connections
 // ==============================================================================
 function saveSettings() {
   state.apiUrl = elements.apiUrlInput.value.trim();
@@ -1014,9 +983,9 @@ async function testConnection() {
     const res = await fetch(`${testUrl}?action=ping`);
     const data = await res.json();
     if (data && data.success) {
-      alert("✅ Connection Successful!\nConnected to Google Sheets API.");
+      alert("✅ Connection Successful!\nGoogle Sheets API is responsive.");
     } else {
-      alert("⚠️ Received response from Web App:\n" + JSON.stringify(data));
+      alert("⚠️ Received unexpected response:\n" + JSON.stringify(data));
     }
   } catch (err) {
     alert("❌ Connection Failed!\nEnsure you deployed the Web App with access set to 'Anyone'. Error: " + err.message);
