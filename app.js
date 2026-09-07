@@ -325,17 +325,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const paramArena = urlParams.get("arena");
   const paramCoord = urlParams.get("coord");
 
-  if (paramCoord && COORDINATORS[paramCoord]) {
-    state.currentUser = COORDINATORS[paramCoord];
-    localStorage.setItem("vn_coordinator", JSON.stringify(COORDINATORS[paramCoord]));
-    if (COORDINATORS[paramCoord].lockedEvent) {
-      state.activeEventId = COORDINATORS[paramCoord].lockedEvent;
-    }
+  // Set active event from URL if present
+  if (paramEvent && state.events[paramEvent]) {
+    state.activeEventId = paramEvent;
   }
 
-  if (paramEvent && state.events[paramEvent]) {
-    if (!state.currentUser || state.currentUser.isSuperAdmin || state.currentUser.lockedEvent === paramEvent) {
-      state.activeEventId = paramEvent;
+  if (paramCoord && COORDINATORS[paramCoord]) {
+    const targetCoord = COORDINATORS[paramCoord];
+    if (targetCoord.lockedEvent) {
+      state.activeEventId = targetCoord.lockedEvent;
+    }
+    // For volunteer links, clear any previous Super Admin session on this browser
+    if (!targetCoord.isSuperAdmin) {
+      localStorage.removeItem("vn_coordinator");
+      state.currentUser = null;
     }
   }
 
@@ -450,9 +453,48 @@ function initAuth() {
 }
 
 function showLoginModal() {
-  if (elements.coordinatorLoginModal) {
-    elements.coordinatorLoginModal.style.display = "flex";
+  if (!elements.coordinatorLoginModal) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramCoord = urlParams.get("coord");
+  const paramEvent = urlParams.get("event") || state.activeEventId;
+
+  // Filter login profile cards
+  if (elements.coordSelectionGrid) {
+    const cards = elements.coordSelectionGrid.querySelectorAll(".coord-card");
+    let hasActive = false;
+
+    cards.forEach(card => {
+      const id = card.dataset.id;
+      let visible = true;
+
+      // If opened via volunteer magic link, ONLY show that exact volunteer card!
+      if (paramCoord && (paramCoord === "volunteer_shark" || paramCoord === "volunteer_techno")) {
+        visible = (id === paramCoord);
+      } else if (paramEvent === "shark_tank") {
+        // If on Shark Tank event, hide Techno Splurge volunteer profile
+        visible = (id !== "volunteer_techno");
+      } else if (paramEvent === "techno_splurge") {
+        // If on Techno Splurge event, hide Shark Tank volunteer profile
+        visible = (id !== "volunteer_shark");
+      }
+
+      card.style.display = visible ? "flex" : "none";
+
+      if (visible && !hasActive) {
+        cards.forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+        hasActive = true;
+      }
+    });
+
+    // Reset PIN input to empty so user enters their own PIN
+    if (elements.coordPinInput) {
+      elements.coordPinInput.value = "";
+    }
   }
+
+  elements.coordinatorLoginModal.style.display = "flex";
 }
 
 function hideLoginModal() {
