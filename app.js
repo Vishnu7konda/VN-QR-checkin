@@ -1,19 +1,114 @@
 /**
  * ==============================================================================
  * ANTIGRAVITY CONTROLLER — VN QR SCAN 2026
- * TECHNO SPLURGE GATE & ARENA ATTENDANCE SYSTEM
+ * MULTI-EVENT GATE & ARENA ATTENDANCE OPERATING SYSTEM
  * ==============================================================================
  */
 
+// Coordinator Access Profiles
+const COORDINATORS = {
+  vishnu: { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin" },
+  nikhil: { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations" },
+  volunteer: { id: "volunteer", name: "Volunteer Desk", role: "Event Staff", avatar: "👤", badge: "Staff" }
+};
+
+// Multi-Event Registry (Concurrent Events with Separate Google Sheets & Forms)
+const DEFAULT_EVENTS = {
+  shark_tank: {
+    id: "shark_tank",
+    name: "Yuktiveda Shark Tank",
+    brandBadge: "YUKTIVEDA • SHARK TANK",
+    brandTitle: "SHARK TANK 2026",
+    brandSubtitle: "PITCHING ARENA & INVESTOR CHECK-IN",
+    prefix: "ST26-",
+    apiUrl: localStorage.getItem("ts_api_url_shark_tank") || "",
+    gateLabel: "Pitch Arena Entry",
+    arenaModeLabel: "Pitch Rounds",
+    arenas: ["Round 1: 3-Minute Pitch", "Round 2: Shark Q&A", "Round 3: Valuation Battle"],
+    demoDatabase: {
+      "ST26-0001": {
+        registrationId: "ST26-0001",
+        name: "EcoTech Innovations",
+        roll: "Team Alpha (Lead: Rohan)",
+        year: "Startup Track",
+        section: "Hardware & IoT",
+        activities: "Round 1: 3-Minute Pitch, Round 2: Shark Q&A, Round 3: Valuation Battle",
+        arenas: ["Round 1: 3-Minute Pitch", "Round 2: Shark Q&A", "Round 3: Valuation Battle"],
+        paymentStatus: "VERIFIED",
+        entryStatus: "NOT CHECKED IN",
+        entryTime: "",
+        arenaAttendance: {}
+      },
+      "ST26-0002": {
+        registrationId: "ST26-0002",
+        name: "BioHealth Diagnostics",
+        roll: "Team Beta (Lead: Sneha)",
+        year: "HealthTech Track",
+        section: "Biotech & AI",
+        activities: "Round 1: 3-Minute Pitch, Round 2: Shark Q&A",
+        arenas: ["Round 1: 3-Minute Pitch", "Round 2: Shark Q&A"],
+        paymentStatus: "VERIFIED",
+        entryStatus: "NOT CHECKED IN",
+        entryTime: "",
+        arenaAttendance: {}
+      }
+    }
+  },
+  techno_splurge: {
+    id: "techno_splurge",
+    name: "Techno Splurge (IIC)",
+    brandBadge: "VN QR SCAN • 2026",
+    brandTitle: "TECHNO SPLURGE",
+    brandSubtitle: "GATE ENTRY & ARENA ATTENDANCE SCANNER",
+    prefix: "TS26-",
+    apiUrl: localStorage.getItem("ts_api_url_techno_splurge") || "https://script.google.com/macros/s/AKfycbyxI1_OrOcPZx76WYQ9LSoE7v-dhEQm-1IINWv5B5-m-POJzs11kNSSs6pMMVFBYhJKMw/exec",
+    gateLabel: "Main Event Gate Entry",
+    arenaModeLabel: "Arena Attendance",
+    arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic", "Meme War"],
+    demoDatabase: {
+      "TS26-0001": {
+        registrationId: "TS26-0001",
+        name: "Sai Nikhil",
+        roll: "2411CS030059",
+        year: "3rd Year",
+        section: "Alpha",
+        activities: "CEO for 10 Minutes, Tech Parody, Open Mic",
+        arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic"],
+        paymentStatus: "VERIFIED",
+        entryStatus: "NOT CHECKED IN",
+        entryTime: "",
+        arenaAttendance: {}
+      },
+      "TS26-0003": {
+        registrationId: "TS26-0003",
+        name: "Vishnu",
+        roll: "2411cs030183",
+        year: "3rd Year",
+        section: "Gamma",
+        activities: "CEO for 10 Minutes, Tech Parody, Open Mic",
+        arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic"],
+        paymentStatus: "VERIFIED",
+        entryStatus: "NOT CHECKED IN",
+        entryTime: "",
+        arenaAttendance: {}
+      }
+    }
+  }
+};
+
 // Application State
 const state = {
-  apiUrl: localStorage.getItem("ts_api_url") || "https://script.google.com/macros/s/AKfycbyxI1_OrOcPZx76WYQ9LSoE7v-dhEQm-1IINWv5B5-m-POJzs11kNSSs6pMMVFBYhJKMw/exec",
+  currentUser: null,
+  events: DEFAULT_EVENTS,
+  activeEventId: localStorage.getItem("vn_active_event") || "shark_tank",
+  apiUrl: "",
+  demoDatabase: {},
   audioEnabled: localStorage.getItem("ts_audio") !== "false",
   autoResume: localStorage.getItem("ts_autoresume") !== "false",
   
   // Active Mode: "gate" (Main Event Gate Entry) or "arena" (Arena Attendance)
   currentMode: "gate",
-  activeArena: "CEO for 10 Minutes",
+  activeArena: "",
   
   html5QrCode: null,
   isScanning: false,
@@ -23,61 +118,21 @@ const state = {
   
   isProcessingScan: false,
   autoResumeTimeout: null,
-  
-  history: JSON.parse(localStorage.getItem("ts_history") || "[]"),
-  
-  // Local fallback test records (matches exact ticket structure from Google Sheet)
-  demoDatabase: {
-    "TS26-0001": {
-      registrationId: "TS26-0001",
-      name: "Sai Nikhil",
-      roll: "2411CS030059",
-      email: "sainikhil@example.com",
-      phone: "6300725603",
-      year: "3rd Year",
-      section: "Alpha",
-      activities: "CEO for 10 Minutes, Tech Parody, Open Mic",
-      arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic"],
-      paymentStatus: "VERIFIED",
-      entryStatus: "NOT CHECKED IN",
-      entryTime: "",
-      arenaAttendance: {}
-    },
-    "TS26-0003": {
-      registrationId: "TS26-0003",
-      name: "Vishnu",
-      roll: "2411cs030183",
-      email: "vishnu@example.com",
-      phone: "9876543210",
-      year: "3rd Year",
-      section: "Gamma",
-      activities: "CEO for 10 Minutes, Tech Parody, Open Mic",
-      arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic"],
-      paymentStatus: "VERIFIED",
-      entryStatus: "NOT CHECKED IN",
-      entryTime: "",
-      arenaAttendance: {}
-    },
-    "TS26-0004": {
-      registrationId: "TS26-0004",
-      name: "Ananya Sharma",
-      roll: "2411CS030045",
-      email: "ananya@example.com",
-      phone: "9876543211",
-      year: "2nd Year",
-      section: "Beta",
-      activities: "Tech Parody, Open Mic, Meme War",
-      arenas: ["Tech Parody", "Open Mic", "Meme War"],
-      paymentStatus: "VERIFIED",
-      entryStatus: "CHECKED IN",
-      entryTime: "2026-09-07 17:15:00",
-      arenaAttendance: { "Tech Parody": "PRESENT" }
-    }
-  }
+  history: []
 };
 
 // DOM Elements
 const elements = {
+  appBrandBadge: document.getElementById("appBrandBadge"),
+  appBrandTitle: document.getElementById("appBrandTitle"),
+  appBrandSubtitle: document.getElementById("appBrandSubtitle"),
+  coordinatorBadge: document.getElementById("coordinatorBadge"),
+  coordAvatar: document.getElementById("coordAvatar"),
+  coordName: document.getElementById("coordName"),
+  btnSwitchCoord: document.getElementById("btnSwitchCoord"),
+  eventPillsGroup: document.getElementById("eventPillsGroup"),
+  btnEventConfigModal: document.getElementById("btnEventConfigModal"),
+  
   connectionStatus: document.getElementById("connectionStatus"),
   modeGateBtn: document.getElementById("modeGateBtn"),
   modeArenaBtn: document.getElementById("modeArenaBtn"),
@@ -134,11 +189,20 @@ const elements = {
   btnOpenSettings: document.getElementById("btnOpenSettings"),
   btnCloseSettings: document.getElementById("btnCloseSettings"),
   settingsModal: document.getElementById("settingsModal"),
+  settingsActiveEventName: document.getElementById("settingsActiveEventName"),
   apiUrlInput: document.getElementById("apiUrlInput"),
+  eventPrefixInput: document.getElementById("eventPrefixInput"),
+  eventSubtitleInput: document.getElementById("eventSubtitleInput"),
   audioToggle: document.getElementById("audioToggle"),
   autoResumeToggle: document.getElementById("autoResumeToggle"),
   btnSaveSettings: document.getElementById("btnSaveSettings"),
-  btnTestConnection: document.getElementById("btnTestConnection")
+  btnTestConnection: document.getElementById("btnTestConnection"),
+  
+  coordinatorLoginModal: document.getElementById("coordinatorLoginModal"),
+  coordSelectionGrid: document.getElementById("coordSelectionGrid"),
+  coordinatorLoginForm: document.getElementById("coordinatorLoginForm"),
+  coordPinInput: document.getElementById("coordPinInput"),
+  btnLoginSubmit: document.getElementById("btnLoginSubmit")
 };
 
 // ==============================================================================
@@ -238,13 +302,13 @@ const SoundFX = {
 };
 
 // ==============================================================================
-// App Initialization
+// App Initialization & Coordinator Authentication
 // ==============================================================================
 document.addEventListener("DOMContentLoaded", () => {
+  initAuth();
   initUI();
+  switchEvent(state.activeEventId);
   initScanner();
-  updateStats();
-  renderHistory();
   
   // Unlock audio context on initial mobile gesture or keyboard interaction
   const unlockAudio = () => {
@@ -264,9 +328,94 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function initAuth() {
+  const savedCoord = localStorage.getItem("vn_coordinator");
+  if (savedCoord) {
+    try {
+      state.currentUser = JSON.parse(savedCoord);
+      updateCoordinatorUI();
+    } catch (e) {
+      showLoginModal();
+    }
+  } else {
+    showLoginModal();
+  }
+
+  // Profile selection cards in login modal
+  if (elements.coordSelectionGrid) {
+    elements.coordSelectionGrid.querySelectorAll(".coord-card").forEach(card => {
+      card.addEventListener("click", () => {
+        elements.coordSelectionGrid.querySelectorAll(".coord-card").forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+      });
+    });
+  }
+
+  // Login form submission
+  if (elements.coordinatorLoginForm) {
+    elements.coordinatorLoginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const pin = elements.coordPinInput.value.trim();
+      if (!pin) {
+        alert("Please enter your PIN (Default: 2026).");
+        return;
+      }
+
+      const activeCard = elements.coordSelectionGrid.querySelector(".coord-card.active");
+      const coordId = activeCard ? activeCard.dataset.id : "vishnu";
+      const selected = COORDINATORS[coordId] || COORDINATORS.vishnu;
+
+      state.currentUser = selected;
+      localStorage.setItem("vn_coordinator", JSON.stringify(selected));
+      updateCoordinatorUI();
+      hideLoginModal();
+    });
+  }
+
+  // Switch coordinator button
+  if (elements.btnSwitchCoord) {
+    elements.btnSwitchCoord.addEventListener("click", showLoginModal);
+  }
+}
+
+function showLoginModal() {
+  if (elements.coordinatorLoginModal) {
+    elements.coordinatorLoginModal.style.display = "flex";
+  }
+}
+
+function hideLoginModal() {
+  if (elements.coordinatorLoginModal) {
+    elements.coordinatorLoginModal.style.display = "none";
+  }
+}
+
+function updateCoordinatorUI() {
+  if (state.currentUser) {
+    if (elements.coordName) elements.coordName.textContent = state.currentUser.name;
+    if (elements.coordAvatar) elements.coordAvatar.textContent = state.currentUser.avatar || state.currentUser.name[0];
+  }
+}
+
 function initUI() {
   updateConnectionBadge();
   
+  // Event pills click listeners
+  if (elements.eventPillsGroup) {
+    elements.eventPillsGroup.querySelectorAll(".event-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        const evId = pill.dataset.event;
+        if (evId) {
+          switchEvent(evId);
+        }
+      });
+    });
+  }
+
+  if (elements.btnEventConfigModal) {
+    elements.btnEventConfigModal.addEventListener("click", openSettingsForActiveEvent);
+  }
+
   // Mode selection buttons
   elements.modeGateBtn.addEventListener("click", () => switchMode("gate"));
   elements.modeArenaBtn.addEventListener("click", () => switchMode("arena"));
@@ -276,12 +425,7 @@ function initUI() {
   });
 
   // Settings modal handlers
-  elements.btnOpenSettings.addEventListener("click", () => {
-    elements.apiUrlInput.value = state.apiUrl;
-    elements.audioToggle.checked = state.audioEnabled;
-    elements.autoResumeToggle.checked = state.autoResume;
-    elements.settingsModal.style.display = "flex";
-  });
+  elements.btnOpenSettings.addEventListener("click", openSettingsForActiveEvent);
 
   elements.btnCloseSettings.addEventListener("click", () => {
     elements.settingsModal.style.display = "none";
@@ -316,33 +460,82 @@ function initUI() {
   elements.historySearch.addEventListener("input", (e) => filterHistory(e.target.value));
   elements.btnExportCsv.addEventListener("click", exportHistoryCsv);
   elements.btnClearHistory.addEventListener("click", clearHistory);
+}
 
-  // Quick test ID buttons
-  document.querySelectorAll(".chip-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-id");
-      handleRegistrationCode(id);
+function switchEvent(eventId) {
+  if (!state.events[eventId]) return;
+  state.activeEventId = eventId;
+  localStorage.setItem("vn_active_event", eventId);
+
+  const ev = state.events[eventId];
+  state.apiUrl = ev.apiUrl || "";
+  state.demoDatabase = ev.demoDatabase || {};
+
+  // Update branding
+  if (elements.appBrandBadge) elements.appBrandBadge.textContent = ev.brandBadge;
+  if (elements.appBrandTitle) elements.appBrandTitle.textContent = ev.brandTitle;
+  if (elements.appBrandSubtitle) elements.appBrandSubtitle.textContent = ev.brandSubtitle;
+
+  // Update pills UI
+  if (elements.eventPillsGroup) {
+    elements.eventPillsGroup.querySelectorAll(".event-pill").forEach(pill => {
+      if (pill.dataset.event === eventId) {
+        pill.classList.add("active");
+      } else if (pill.dataset.event) {
+        pill.classList.remove("active");
+      }
     });
-  });
+  }
+
+  // Update activity dropdown
+  if (elements.activeArenaSelect && ev.arenas) {
+    elements.activeArenaSelect.innerHTML = ev.arenas.map((a, i) => 
+      `<option value="${escapeHtml(a)}">${i + 1}. ${escapeHtml(a)}</option>`
+    ).join("");
+    state.activeArena = ev.arenas[0] || "Round 1";
+  }
+
+  // Update quick test chip IDs for this event
+  const sampleGroup = document.querySelector(".sample-chip-group");
+  if (sampleGroup) {
+    const keys = Object.keys(state.demoDatabase);
+    const chipsHtml = keys.slice(0, 2).map(k => {
+      const rec = state.demoDatabase[k];
+      return `<button class="chip-btn" data-id="${k}" type="button">${k} (${rec.name})</button>`;
+    }).join("") + `<button class="chip-btn" data-id="${ev.prefix}9999" type="button">${ev.prefix}9999 (Invalid)</button>`;
+
+    sampleGroup.innerHTML = `<span class="sample-label">Quick test IDs:</span> ${chipsHtml}`;
+    sampleGroup.querySelectorAll(".chip-btn").forEach(btn => {
+      btn.addEventListener("click", () => handleRegistrationCode(btn.getAttribute("data-id")));
+    });
+  }
+
+  // Load isolated history for this event!
+  state.history = JSON.parse(localStorage.getItem(`ts_history_${eventId}`) || "[]");
+  renderHistory();
+  updateConnectionBadge();
+  switchMode(state.currentMode);
 }
 
 function switchMode(mode) {
   state.currentMode = mode;
+  const ev = state.events[state.activeEventId] || DEFAULT_EVENTS.shark_tank;
+
   if (mode === "gate") {
     elements.modeGateBtn.classList.add("active");
     elements.modeArenaBtn.classList.remove("active");
     elements.arenaDropdownWrap.style.display = "none";
-    elements.scannerTitle.textContent = "Main Gate Scanner";
-    elements.scannerHint.textContent = "Point camera directly at the participant ticket QR code";
+    elements.scannerTitle.textContent = `${ev.name}: Gate Scanner`;
+    elements.scannerHint.textContent = `Point camera directly at the participant ticket QR code (${ev.prefix}...)`;
     elements.statCheckedLabel.textContent = "Gate Checked In";
   } else {
     elements.modeGateBtn.classList.remove("active");
     elements.modeArenaBtn.classList.add("active");
     elements.arenaDropdownWrap.style.display = "flex";
     state.activeArena = elements.activeArenaSelect.value;
-    elements.scannerTitle.textContent = "Arena Attendance: " + state.activeArena;
-    elements.scannerHint.textContent = "Checking arena registration & marking PRESENT";
-    elements.statCheckedLabel.textContent = "Arena Attendees";
+    elements.scannerTitle.textContent = `${state.activeArena} Attendance`;
+    elements.scannerHint.textContent = `Verifying participant registration & marking PRESENT`;
+    elements.statCheckedLabel.textContent = "Round Attendees";
   }
   updateStats();
   resetToIdle();
@@ -856,7 +1049,8 @@ function displayScanResult(result) {
     triggerConfetti();
     addHistoryRecord({
       time: nowTime,
-      mode: state.currentMode === "gate" ? "Main Gate" : state.activeArena,
+      scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
+      mode: state.currentMode === "gate" ? (state.events[state.activeEventId]?.gateLabel || "Gate Entry") : state.activeArena,
       regId: regId,
       name: name,
       rollNo: rollNo,
@@ -880,7 +1074,8 @@ function displayScanResult(result) {
     SoundFX.playWarning();
     addHistoryRecord({
       time: nowTime,
-      mode: state.currentMode === "gate" ? "Main Gate" : state.activeArena,
+      scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
+      mode: state.currentMode === "gate" ? (state.events[state.activeEventId]?.gateLabel || "Gate Entry") : state.activeArena,
       regId: regId,
       name: name,
       rollNo: rollNo,
@@ -894,7 +1089,7 @@ function displayScanResult(result) {
     // 🔴 ERROR
     elements.resultBanner.className = "result-banner banner-error";
     elements.bannerIcon.textContent = "✕";
-    elements.bannerTitle.textContent = result.status === "ACTIVITY_NOT_SELECTED" ? "ARENA NOT REGISTERED" : (result.status === "NOT_CHECKED_IN_GATE" ? "GATE ENTRY REQUIRED" : "ENTRY REJECTED");
+    elements.bannerTitle.textContent = result.status === "ACTIVITY_NOT_SELECTED" ? "ROUND NOT REGISTERED" : (result.status === "NOT_CHECKED_IN_GATE" ? "GATE ENTRY REQUIRED" : "ENTRY REJECTED");
     elements.bannerSubtitle.textContent = result.message || "Participant verification failed.";
     
     elements.displayCheckinStatus.textContent = "DENIED";
@@ -904,13 +1099,14 @@ function displayScanResult(result) {
     SoundFX.playError();
     addHistoryRecord({
       time: nowTime,
-      mode: state.currentMode === "gate" ? "Main Gate" : state.activeArena,
+      scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
+      mode: state.currentMode === "gate" ? (state.events[state.activeEventId]?.gateLabel || "Gate Entry") : state.activeArena,
       regId: regId,
       name: name || "Unknown",
       rollNo: rollNo || "—",
       section: p.section || "—",
       arenas: arenasList.join(", ") || "—",
-      status: result.status === "ACTIVITY_NOT_SELECTED" ? "WRONG ARENA" : (result.status === "NOT_CHECKED_IN_GATE" ? "NOT AT GATE" : "REJECTED"),
+      status: result.status === "ACTIVITY_NOT_SELECTED" ? "WRONG ROUND" : (result.status === "NOT_CHECKED_IN_GATE" ? "NOT AT GATE" : "REJECTED"),
       statusClass: "tag-error"
     });
   }
@@ -997,7 +1193,7 @@ function updateStats() {
 function addHistoryRecord(record) {
   state.history.unshift(record);
   if (state.history.length > 250) state.history.pop();
-  localStorage.setItem("ts_history", JSON.stringify(state.history));
+  localStorage.setItem(`ts_history_${state.activeEventId}`, JSON.stringify(state.history));
   renderHistory();
 }
 
@@ -1013,7 +1209,8 @@ function renderHistory(filterText = "") {
       (item.name && item.name.toLowerCase().includes(q)) ||
       (item.regId && item.regId.toLowerCase().includes(q)) ||
       (item.rollNo && item.rollNo.toLowerCase().includes(q)) ||
-      (item.mode && item.mode.toLowerCase().includes(q))
+      (item.mode && item.mode.toLowerCase().includes(q)) ||
+      (item.scannedBy && item.scannedBy.toLowerCase().includes(q))
     );
   });
 
@@ -1022,7 +1219,7 @@ function renderHistory(filterText = "") {
   if (!filtered.length) {
     elements.historyTableBody.innerHTML = `
       <tr class="empty-row">
-        <td colspan="8">${q ? "No check-ins match your search filter." : "No participants scanned yet. Scanned records will appear here in real time."}</td>
+        <td colspan="9">${q ? "No check-ins match your search filter." : "No participants scanned yet. Scanned records will appear here in real time."}</td>
       </tr>
     `;
     return;
@@ -1031,6 +1228,7 @@ function renderHistory(filterText = "") {
   elements.historyTableBody.innerHTML = filtered.map(item => `
     <tr>
       <td class="font-mono">${escapeHtml(item.time || '—')}</td>
+      <td class="font-mono font-bold" style="color: var(--emerald-primary);">${escapeHtml(item.scannedBy || 'Vishnu')}</td>
       <td><span class="badge" style="background: var(--brand-subtle); color: var(--brand-light); border-color: var(--border-brand);">${escapeHtml(item.mode || "Gate")}</span></td>
       <td class="font-mono font-bold">${escapeHtml(item.regId || '—')}</td>
       <td><strong>${escapeHtml(item.name || 'Participant')}</strong></td>
@@ -1047,22 +1245,23 @@ function filterHistory(query) {
 }
 
 function clearHistory() {
-  if (confirm("Are you sure you want to clear the local scan history? (Google Sheet records will NOT be deleted)")) {
+  if (confirm(`Are you sure you want to clear scan history for ${state.events[state.activeEventId]?.name || 'this event'}? (Google Sheet records will NOT be deleted)`)) {
     state.history = [];
-    localStorage.removeItem("ts_history");
+    localStorage.removeItem(`ts_history_${state.activeEventId}`);
     renderHistory();
   }
 }
 
 function exportHistoryCsv() {
   if (!state.history.length) {
-    alert("No history records to export.");
+    alert("No history records to export for this event.");
     return;
   }
 
-  const headers = ["Time", "Mode", "Registration ID", "Name", "Roll Number", "Section", "Selected Arenas", "Status"];
+  const headers = ["Time", "Scanned By", "Mode", "Registration ID", "Name", "Roll / Team", "Section / Track", "Selected Arenas", "Status"];
   const rows = state.history.map(h => [
     `"${h.time || ''}"`,
+    `"${h.scannedBy || 'Vishnu'}"`,
     `"${h.mode || 'Gate'}"`,
     `"${h.regId || ''}"`,
     `"${(h.name || '').replace(/"/g, '""')}"`,
@@ -1076,28 +1275,44 @@ function exportHistoryCsv() {
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `VN_QR_Scan_Checkins_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute("download", `${state.activeEventId}_Checkins_${new Date().toISOString().slice(0, 10)}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
 
 // ==============================================================================
-// Settings Modal & Diagnostic Connections
+// Multi-Event Settings Modal & Diagnostic Connections
 // ==============================================================================
+function openSettingsForActiveEvent() {
+  const ev = state.events[state.activeEventId] || DEFAULT_EVENTS.shark_tank;
+  if (elements.settingsActiveEventName) elements.settingsActiveEventName.textContent = ev.name;
+  if (elements.apiUrlInput) elements.apiUrlInput.value = ev.apiUrl || "";
+  if (elements.eventPrefixInput) elements.eventPrefixInput.value = ev.prefix || "";
+  if (elements.eventSubtitleInput) elements.eventSubtitleInput.value = ev.brandSubtitle || "";
+  if (elements.audioToggle) elements.audioToggle.checked = state.audioEnabled;
+  if (elements.autoResumeToggle) elements.autoResumeToggle.checked = state.autoResume;
+  elements.settingsModal.style.display = "flex";
+}
+
 function saveSettings() {
-  state.apiUrl = elements.apiUrlInput.value.trim();
+  const ev = state.events[state.activeEventId];
+  if (ev) {
+    ev.apiUrl = elements.apiUrlInput.value.trim();
+    ev.prefix = elements.eventPrefixInput.value.trim() || ev.prefix;
+    ev.brandSubtitle = elements.eventSubtitleInput.value.trim() || ev.brandSubtitle;
+    localStorage.setItem(`ts_api_url_${state.activeEventId}`, ev.apiUrl);
+    localStorage.setItem("vn_events", JSON.stringify(state.events));
+  }
+
   state.audioEnabled = elements.audioToggle.checked;
   state.autoResume = elements.autoResumeToggle.checked;
-
-  localStorage.setItem("ts_api_url", state.apiUrl);
   localStorage.setItem("ts_audio", String(state.audioEnabled));
   localStorage.setItem("ts_autoresume", String(state.autoResume));
 
-  updateConnectionBadge();
+  switchEvent(state.activeEventId);
   elements.settingsModal.style.display = "none";
-  updateStats();
-  alert("Settings saved successfully!");
+  alert(`Settings updated successfully for ${ev ? ev.name : "Event"}!`);
 }
 
 async function testConnection() {
@@ -1130,7 +1345,7 @@ async function testConnection() {
       alert("❌ Connection Failed!\nEnsure you deployed the Web App with access set to 'Anyone'.\nDetails: " + err.message);
     }
   } finally {
-    elements.btnTestConnection.textContent = "Test Connection";
+    elements.btnTestConnection.textContent = "Test Sheet Connection";
     elements.btnTestConnection.disabled = false;
   }
 }

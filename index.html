@@ -26,17 +26,29 @@
     <!-- Top Navigation / Header -->
     <header class="top-header">
       <div class="brand-block">
-        <div class="brand-badge">VN QR SCAN • 2026</div>
-        <h1 class="brand-title">TECHNO SPLURGE</h1>
-        <p class="brand-subtitle">GATE ENTRY & ARENA ATTENDANCE SCANNER</p>
+        <div class="brand-badge" id="appBrandBadge">VN QR SCAN • 2026</div>
+        <h1 class="brand-title" id="appBrandTitle">TECHNO SPLURGE</h1>
+        <p class="brand-subtitle" id="appBrandSubtitle">GATE ENTRY & ARENA ATTENDANCE SCANNER</p>
       </div>
       
       <div class="header-actions">
+        <!-- Coordinator Active Badge -->
+        <div id="coordinatorBadge" class="coordinator-badge" title="Active Scanner Coordinator">
+          <div class="coordinator-avatar" id="coordAvatar">V</div>
+          <div class="coordinator-info">
+            <span class="coord-label">Scanner Operator</span>
+            <span class="coord-name" id="coordName">Vishnu</span>
+          </div>
+          <button id="btnSwitchCoord" class="btn-coord-switch" title="Switch Coordinator / Sign Out" type="button">
+            Switch
+          </button>
+        </div>
+
         <div id="connectionStatus" class="connection-status status-online" title="Connection Mode">
           <span class="status-dot"></span>
           <span class="status-label">Google Sheets Live</span>
         </div>
-        <button id="btnOpenSettings" class="icon-btn" title="API & Scanner Settings" aria-label="Settings">
+        <button id="btnOpenSettings" class="icon-btn" title="API & Event Settings" aria-label="Settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -44,6 +56,30 @@
         </button>
       </div>
     </header>
+
+    <!-- Event Switcher Navigation Bar -->
+    <nav class="event-switcher-nav" aria-label="Event Switcher">
+      <div class="event-switcher-label">
+        <span class="event-label-icon">🎯</span>
+        <span class="event-label-text">Select Active Event:</span>
+      </div>
+      <div class="event-pills-group" id="eventPillsGroup">
+        <!-- Event Pills dynamically injected or updated -->
+        <button class="event-pill active" data-event="shark_tank" type="button">
+          <span class="pill-dot"></span>
+          <span class="pill-title">Yuktiveda Shark Tank</span>
+          <span class="pill-badge">ST26</span>
+        </button>
+        <button class="event-pill" data-event="techno_splurge" type="button">
+          <span class="pill-dot"></span>
+          <span class="pill-title">Techno Splurge (IIC)</span>
+          <span class="pill-badge">TS26</span>
+        </button>
+        <button id="btnEventConfigModal" class="event-pill pill-add" type="button" title="Configure Events & Form Sheets">
+          <span>⚙️ Event Sheets</span>
+        </button>
+      </div>
+    </nav>
 
     <!-- Scan Mode Selector Bar (Main Gate Entry vs Arena Attendance) -->
     <section class="mode-selector-bar">
@@ -302,6 +338,7 @@
             <thead>
               <tr>
                 <th>Time</th>
+                <th>Scanned By</th>
                 <th>Mode</th>
                 <th>Registration ID</th>
                 <th>Name</th>
@@ -313,7 +350,7 @@
             </thead>
             <tbody id="historyTableBody">
               <tr class="empty-row">
-                <td colspan="8">No participants scanned yet. Scanned entries will appear here in real time.</td>
+                <td colspan="9">No participants scanned yet. Scanned entries will appear here in real time.</td>
               </tr>
             </tbody>
           </table>
@@ -321,16 +358,21 @@
       </div>
     </section>
 
-    <!-- Settings Modal -->
+    <!-- Multi-Event & Sheets Configuration Modal -->
     <div id="settingsModal" class="modal-overlay" style="display: none;">
       <div class="modal-card">
         <div class="modal-header">
-          <h3>Scanner & Google Sheets Settings</h3>
+          <div>
+            <h3 style="margin-bottom: 2px;">Multi-Event & Google Sheet Settings</h3>
+            <small style="color: var(--text-muted); font-size: 0.78rem;">Configure separate Google Sheets / Forms for concurrent events</small>
+          </div>
           <button id="btnCloseSettings" class="icon-btn" type="button">&times;</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label for="apiUrlInput">Google Apps Script Web App URL</label>
+          <!-- Active Event Configuration -->
+          <div class="form-group" style="background: var(--bg-card-subtle); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <label style="color: var(--emerald-primary); font-weight: 800;">ACTIVE EVENT: <span id="settingsActiveEventName">Yuktiveda Shark Tank</span></label>
+            <label for="apiUrlInput" style="margin-top: 8px;">Google Apps Script Web App URL for this event:</label>
             <input 
               type="url" 
               id="apiUrlInput" 
@@ -338,14 +380,26 @@
               class="form-control font-mono"
             >
             <small class="form-hint">
-              Connected to your Google Apps Script Web App endpoint.
+              Each event can have its own independent Google Sheet & Apps Script deployment!
             </small>
+          </div>
+
+          <!-- Event Details Config -->
+          <div class="participant-grid" style="gap: 12px; margin-top: 0;">
+            <div class="form-group">
+              <label for="eventPrefixInput">Ticket ID Prefix</label>
+              <input type="text" id="eventPrefixInput" class="form-control font-mono" placeholder="e.g. ST26- or TS26-">
+            </div>
+            <div class="form-group">
+              <label for="eventSubtitleInput">Event Tagline / Subtitle</label>
+              <input type="text" id="eventSubtitleInput" class="form-control" placeholder="e.g. Pitching Arena & Investor Check-in">
+            </div>
           </div>
 
           <div class="form-group checkbox-group">
             <label class="switch-label">
               <input type="checkbox" id="audioToggle" checked>
-              <span>Audio alerts & sound effects (Success chime / Alert buzzer)</span>
+              <span>Audio alerts & sound effects (Chimes / Buzzers)</span>
             </label>
           </div>
 
@@ -357,18 +411,81 @@
           </div>
 
           <div class="modal-info-box">
-            <h4>💡 Setup & Synchronization:</h4>
+            <h4>💡 Multi-Event Google Forms Architecture:</h4>
             <ol>
-              <li>The scanner communicates directly with your Google Sheet (Form Responses 1).</li>
-              <li>Main Gate mode writes <code>CHECKED IN</code> and entry timestamp.</li>
-              <li>Arena mode verifies selection and writes <code>PRESENT</code> in the respective arena column.</li>
+              <li><strong>Concurrent Events:</strong> Open <em>Yuktiveda Shark Tank</em> on one device and <em>Techno Splurge</em> on another, or toggle between them anytime.</li>
+              <li><strong>Separate Google Forms:</strong> Each event links to its own Google Sheet response tab.</li>
+              <li><strong>Audit Logging:</strong> Every scan is stamped with the active coordinator (Vishnu, Nikhil, etc.).</li>
             </ol>
           </div>
         </div>
         <div class="modal-footer">
-          <button id="btnTestConnection" class="btn btn-secondary" type="button">Test Connection</button>
-          <button id="btnSaveSettings" class="btn btn-primary" type="button">Save Settings</button>
+          <button id="btnTestConnection" class="btn btn-secondary" type="button">Test Sheet Connection</button>
+          <button id="btnSaveSettings" class="btn btn-primary" type="button">Save Event Config</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Coordinator Authentication Portal Modal -->
+    <div id="coordinatorLoginModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card coord-login-card">
+        <div class="login-header-block">
+          <div class="brand-badge" style="align-self: center; margin-bottom: 8px;">SECURITY CHECKPOINT</div>
+          <h2 class="login-title">Coordinator Login Portal</h2>
+          <p class="login-desc">Select your coordinator identity to operate the scanner and stamp verified check-ins.</p>
+        </div>
+
+        <div class="coord-selection-grid" id="coordSelectionGrid">
+          <div class="coord-card active" data-id="vishnu" data-name="Vishnu" data-role="Lead Coordinator">
+            <div class="coord-avatar-large">V</div>
+            <div class="coord-details">
+              <strong>Vishnu</strong>
+              <span class="coord-role-text">Lead Coordinator</span>
+            </div>
+            <span class="coord-pill-tag tag-lead">Super Admin</span>
+          </div>
+
+          <div class="coord-card" data-id="nikhil" data-name="Nikhil" data-role="Arena & Gate Lead">
+            <div class="coord-avatar-large avatar-nikhil">N</div>
+            <div class="coord-details">
+              <strong>Nikhil</strong>
+              <span class="coord-role-text">Arena & Gate Lead</span>
+            </div>
+            <span class="coord-pill-tag tag-ops">Operations</span>
+          </div>
+
+          <div class="coord-card" data-id="volunteer" data-name="Volunteer Desk" data-role="Event Staff">
+            <div class="coord-avatar-large avatar-volunteer">👤</div>
+            <div class="coord-details">
+              <strong>Volunteer Desk</strong>
+              <span class="coord-role-text">Event Staff</span>
+            </div>
+            <span class="coord-pill-tag tag-staff">Volunteer</span>
+          </div>
+        </div>
+
+        <form id="coordinatorLoginForm" class="login-form">
+          <div class="form-group">
+            <label for="coordPinInput">Security PIN / Access Key</label>
+            <div class="input-with-btn">
+              <input 
+                type="password" 
+                id="coordPinInput" 
+                class="form-control font-mono" 
+                placeholder="Enter PIN (Default: 2026)" 
+                value="2026" 
+                maxlength="10"
+                autocomplete="current-password"
+                required
+              >
+              <button type="submit" class="btn btn-primary" id="btnLoginSubmit">
+                <span>Enter Dashboard</span>
+                <span>➔</span>
+              </button>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.76rem;">Default quick-access PIN: <code>2026</code></small>
+          </div>
+        </form>
       </div>
     </div>
 
