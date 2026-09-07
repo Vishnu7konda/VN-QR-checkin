@@ -1,7 +1,7 @@
 /**
  * ==============================================================================
  * TECHNO SPLURGE 2026 - EVENT GATE & ARENA ATTENDANCE SCANNER
- * IIC CLUB • MALLA REDDY UNIVERSITY
+ * MALLA REDDY UNIVERSITY
  * ==============================================================================
  */
 

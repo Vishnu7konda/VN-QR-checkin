@@ -1,5 +1,5 @@
 # TECHNO SPLURGE 2026 — Gate QR Scanner & Check-In System
-**IIC CLUB • MALLA REDDY UNIVERSITY**
+**MALLA REDDY UNIVERSITY**
 
 A real-time QR scanner and gate entry verification system for TECHNO SPLURGE 2026. This connects directly to your existing Google Sheet (where participant registrations from Google Forms are saved) to verify tickets, prevent duplicate entry, and record attendance timestamps automatically.
 
