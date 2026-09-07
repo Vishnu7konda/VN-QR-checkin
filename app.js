@@ -202,7 +202,17 @@ const elements = {
   coordSelectionGrid: document.getElementById("coordSelectionGrid"),
   coordinatorLoginForm: document.getElementById("coordinatorLoginForm"),
   coordPinInput: document.getElementById("coordPinInput"),
-  btnLoginSubmit: document.getElementById("btnLoginSubmit")
+  btnLoginSubmit: document.getElementById("btnLoginSubmit"),
+
+  btnShareVolunteer: document.getElementById("btnShareVolunteer"),
+  shareVolunteerModal: document.getElementById("shareVolunteerModal"),
+  btnCloseShareModal: document.getElementById("btnCloseShareModal"),
+  shareEventSelect: document.getElementById("shareEventSelect"),
+  shareDeskSelect: document.getElementById("shareDeskSelect"),
+  volunteerQrImage: document.getElementById("volunteerQrImage"),
+  shareLinkPreview: document.getElementById("shareLinkPreview"),
+  btnCopyVolunteerLink: document.getElementById("btnCopyVolunteerLink"),
+  btnWhatsappShare: document.getElementById("btnWhatsappShare")
 };
 
 // ==============================================================================
@@ -302,12 +312,39 @@ const SoundFX = {
 };
 
 // ==============================================================================
+// ==============================================================================
 // App Initialization & Coordinator Authentication
 // ==============================================================================
 document.addEventListener("DOMContentLoaded", () => {
+  // Parse URL query parameters for instant magic link configuration
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramEvent = urlParams.get("event");
+  const paramMode = urlParams.get("mode");
+  const paramArena = urlParams.get("arena");
+  const paramCoord = urlParams.get("coord");
+
+  if (paramCoord && COORDINATORS[paramCoord]) {
+    state.currentUser = COORDINATORS[paramCoord];
+    localStorage.setItem("vn_coordinator", JSON.stringify(COORDINATORS[paramCoord]));
+  }
+
+  if (paramEvent && state.events[paramEvent]) {
+    state.activeEventId = paramEvent;
+  }
+
   initAuth();
   initUI();
   switchEvent(state.activeEventId);
+
+  // Apply desk / mode from URL if provided
+  if (paramMode) {
+    if (paramMode === "arena" && paramArena) {
+      state.activeArena = paramArena;
+      if (elements.activeArenaSelect) elements.activeArenaSelect.value = paramArena;
+    }
+    switchMode(paramMode);
+  }
+
   initScanner();
   
   // Unlock audio context on initial mobile gesture or keyboard interaction
@@ -334,6 +371,7 @@ function initAuth() {
     try {
       state.currentUser = JSON.parse(savedCoord);
       updateCoordinatorUI();
+      hideLoginModal();
     } catch (e) {
       showLoginModal();
     }
@@ -414,6 +452,38 @@ function initUI() {
 
   if (elements.btnEventConfigModal) {
     elements.btnEventConfigModal.addEventListener("click", openSettingsForActiveEvent);
+  }
+
+  // Volunteer Share modal handlers
+  if (elements.btnShareVolunteer) {
+    elements.btnShareVolunteer.addEventListener("click", openShareVolunteerModal);
+  }
+  if (elements.btnCloseShareModal) {
+    elements.btnCloseShareModal.addEventListener("click", () => {
+      elements.shareVolunteerModal.style.display = "none";
+    });
+  }
+  if (elements.shareVolunteerModal) {
+    elements.shareVolunteerModal.addEventListener("click", (e) => {
+      if (e.target === elements.shareVolunteerModal) {
+        elements.shareVolunteerModal.style.display = "none";
+      }
+    });
+  }
+  if (elements.shareEventSelect) {
+    elements.shareEventSelect.addEventListener("change", () => {
+      populateShareDesks();
+      updateShareVolunteerModalContent();
+    });
+  }
+  if (elements.shareDeskSelect) {
+    elements.shareDeskSelect.addEventListener("change", updateShareVolunteerModalContent);
+  }
+  if (elements.btnCopyVolunteerLink) {
+    elements.btnCopyVolunteerLink.addEventListener("click", copyVolunteerLink);
+  }
+  if (elements.btnWhatsappShare) {
+    elements.btnWhatsappShare.addEventListener("click", shareWhatsapp);
   }
 
   // Mode selection buttons
@@ -1359,4 +1429,93 @@ function formatCurrentTimestamp() {
 function escapeHtml(str) {
   if (!str) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// ==============================================================================
+// Volunteer Magic Link & Dispatch Generator
+// ==============================================================================
+function openShareVolunteerModal() {
+  if (!elements.shareVolunteerModal) return;
+
+  if (elements.shareEventSelect) {
+    elements.shareEventSelect.innerHTML = Object.keys(state.events).map(id => 
+      `<option value="${id}" ${id === state.activeEventId ? 'selected' : ''}>${escapeHtml(state.events[id].name)}</option>`
+    ).join("");
+  }
+
+  populateShareDesks();
+  updateShareVolunteerModalContent();
+  elements.shareVolunteerModal.style.display = "flex";
+}
+
+function populateShareDesks() {
+  if (!elements.shareDeskSelect || !elements.shareEventSelect) return;
+  const eventId = elements.shareEventSelect.value;
+  const ev = state.events[eventId] || state.events[state.activeEventId];
+  if (!ev) return;
+
+  let optionsHtml = `<option value="gate">🚪 Main Gate Entry</option>`;
+  (ev.arenas || []).forEach(arena => {
+    optionsHtml += `<option value="arena:${escapeHtml(arena)}">🎯 ${escapeHtml(arena)}</option>`;
+  });
+  elements.shareDeskSelect.innerHTML = optionsHtml;
+}
+
+function getVolunteerShareLink() {
+  const eventId = elements.shareEventSelect ? elements.shareEventSelect.value : state.activeEventId;
+  const deskVal = elements.shareDeskSelect ? elements.shareDeskSelect.value : "gate";
+  
+  const baseUrl = window.location.origin + window.location.pathname;
+  const params = new URLSearchParams();
+  params.set("event", eventId);
+  params.set("coord", "volunteer");
+
+  if (deskVal.startsWith("arena:")) {
+    params.set("mode", "arena");
+    params.set("arena", deskVal.replace("arena:", ""));
+  } else {
+    params.set("mode", "gate");
+  }
+
+  return `${baseUrl}?${params.toString()}`;
+}
+
+function updateShareVolunteerModalContent() {
+  const link = getVolunteerShareLink();
+  if (elements.shareLinkPreview) elements.shareLinkPreview.textContent = link;
+  if (elements.volunteerQrImage) {
+    elements.volunteerQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(link)}`;
+  }
+}
+
+function copyVolunteerLink() {
+  const link = getVolunteerShareLink();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      alert("✅ Volunteer link copied to clipboard!\nPaste this link in your volunteer WhatsApp group.");
+    }).catch(() => {
+      prompt("Copy this volunteer link:", link);
+    });
+  } else {
+    prompt("Copy this volunteer link:", link);
+  }
+}
+
+function shareWhatsapp() {
+  const eventId = elements.shareEventSelect ? elements.shareEventSelect.value : state.activeEventId;
+  const ev = state.events[eventId] || state.events[state.activeEventId];
+  const link = getVolunteerShareLink();
+  const desk = elements.shareDeskSelect ? elements.shareDeskSelect.options[elements.shareDeskSelect.selectedIndex].text : "Check-in Scanner";
+
+  const message = `🚨 *${ev.name.toUpperCase()} — VOLUNTEER SCANNER ACCESS* 🚨\n\n` +
+    `Hello Team! Here is your live check-in scanner link for *${desk}*:\n\n` +
+    `📲 *Open Scanner:* ${link}\n\n` +
+    `🔑 *Security PIN:* 2026\n\n` +
+    `📌 *Instructions:*\n` +
+    `1. Tap the link above in Chrome (Android) or Safari (iPhone)\n` +
+    `2. Allow camera permission\n` +
+    `3. Start scanning attendee QR codes!\n` +
+    `💡 Tip: Tap 'Add to Home Screen' in browser menu for a full-screen app!`;
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, "_blank");
 }
