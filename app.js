@@ -9,26 +9,26 @@
 const COORDINATORS = {
   vishnu: { id: "vishnu", name: "Vishnu", role: "Lead Coordinator", avatar: "V", badge: "Super Admin", pin: "2026", isSuperAdmin: true },
   nikhil: { id: "nikhil", name: "Nikhil", role: "Arena & Gate Lead", avatar: "N", badge: "Operations", pin: "2026", isSuperAdmin: true },
-  volunteer_shark: { id: "volunteer_shark", name: "Shark Tank Staff", role: "Event Staff", avatar: "🦈", badge: "Shark Tank Only", pin: "1111", lockedEvent: "shark_tank", isSuperAdmin: false },
-  volunteer_techno: { id: "volunteer_techno", name: "Techno Splurge Staff", role: "Event Staff", avatar: "⚡", badge: "Techno Splurge Only", pin: "2222", lockedEvent: "techno_splurge", isSuperAdmin: false }
+  volunteer_shark: { id: "volunteer_shark", name: "Yuktiveda Club Staff", role: "Event Staff", avatar: "🦈", badge: "Yuktiveda Club", pin: "1111", lockedEvent: "shark_tank", isSuperAdmin: false },
+  volunteer_techno: { id: "volunteer_techno", name: "IIC Club Staff", role: "Event Staff", avatar: "⚡", badge: "IIC Club", pin: "2222", lockedEvent: "techno_splurge", isSuperAdmin: false }
 };
 
 // Multi-Event Registry (Concurrent Events with Separate Google Sheets & Forms)
 const DEFAULT_EVENTS = {
   shark_tank: {
     id: "shark_tank",
-    name: "Yuktiveda Shark Tank",
-    brandBadge: "YUKTIVEDA • SHARK TANK",
-    brandTitle: "SHARK TANK 2026",
-    brandSubtitle: "PITCHING ARENA & INVESTOR CHECK-IN",
-    prefix: "ST26-",
+    name: "Yuktiveda Club",
+    brandBadge: "YUKTIVEDA CLUB • 2026",
+    brandTitle: "YUKTIVEDA CLUB",
+    brandSubtitle: "GATE ENTRY & ARENA ATTENDANCE SCANNER",
+    prefix: "YC26-",
     apiUrl: localStorage.getItem("ts_api_url_shark_tank") || "",
-    gateLabel: "Pitch Arena Entry",
-    arenaModeLabel: "Pitch Rounds",
-    arenas: ["Round 1: 3-Minute Pitch", "Round 2: Shark Q&A", "Round 3: Valuation Battle"],
+    gateLabel: "Main Gate Entry",
+    arenaModeLabel: "Arena Attendance",
+    arenas: ["Shark Tank Pitching", "Round 1: 3-Minute Pitch", "Round 2: Shark Q&A", "Round 3: Valuation Battle"],
     demoDatabase: {
-      "ST26-0001": {
-        registrationId: "ST26-0001",
+      "YC26-0001": {
+        registrationId: "YC26-0001",
         name: "EcoTech Innovations",
         roll: "Team Alpha (Lead: Rohan)",
         year: "Startup Track",
@@ -40,8 +40,8 @@ const DEFAULT_EVENTS = {
         entryTime: "",
         arenaAttendance: {}
       },
-      "ST26-0002": {
-        registrationId: "ST26-0002",
+      "YC26-0002": {
+        registrationId: "YC26-0002",
         name: "BioHealth Diagnostics",
         roll: "Team Beta (Lead: Sneha)",
         year: "HealthTech Track",
@@ -57,18 +57,18 @@ const DEFAULT_EVENTS = {
   },
   techno_splurge: {
     id: "techno_splurge",
-    name: "Techno Splurge (IIC)",
-    brandBadge: "VN QR SCAN • 2026",
-    brandTitle: "TECHNO SPLURGE",
+    name: "IIC Club",
+    brandBadge: "IIC CLUB • 2026",
+    brandTitle: "IIC CLUB",
     brandSubtitle: "GATE ENTRY & ARENA ATTENDANCE SCANNER",
-    prefix: "TS26-",
+    prefix: "IIC26-",
     apiUrl: localStorage.getItem("ts_api_url_techno_splurge") || "https://script.google.com/macros/s/AKfycbyxI1_OrOcPZx76WYQ9LSoE7v-dhEQm-1IINWv5B5-m-POJzs11kNSSs6pMMVFBYhJKMw/exec",
-    gateLabel: "Main Event Gate Entry",
+    gateLabel: "Main Gate Entry",
     arenaModeLabel: "Arena Attendance",
     arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic", "Meme War"],
     demoDatabase: {
-      "TS26-0001": {
-        registrationId: "TS26-0001",
+      "IIC26-0001": {
+        registrationId: "IIC26-0001",
         name: "Sai Nikhil",
         roll: "2411CS030059",
         year: "3rd Year",
@@ -80,8 +80,8 @@ const DEFAULT_EVENTS = {
         entryTime: "",
         arenaAttendance: {}
       },
-      "TS26-0003": {
-        registrationId: "TS26-0003",
+      "IIC26-0003": {
+        registrationId: "IIC26-0003",
         name: "Vishnu",
         roll: "2411cs030183",
         year: "3rd Year",
@@ -324,6 +324,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const paramMode = urlParams.get("mode");
   const paramArena = urlParams.get("arena");
   const paramCoord = urlParams.get("coord");
+
+  // Synchronize official club naming across sessions
+  if (state.events.shark_tank) {
+    state.events.shark_tank.name = "Yuktiveda Club";
+    state.events.shark_tank.brandTitle = "YUKTIVEDA CLUB";
+  }
+  if (state.events.techno_splurge) {
+    state.events.techno_splurge.name = "IIC Club";
+    state.events.techno_splurge.brandTitle = "IIC CLUB";
+  }
 
   // Set active event from URL if present
   if (paramEvent && state.events[paramEvent]) {

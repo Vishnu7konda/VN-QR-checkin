@@ -26,8 +26,8 @@
     <!-- Top Navigation / Header -->
     <header class="top-header">
       <div class="brand-block">
-        <div class="brand-badge" id="appBrandBadge">VN QR SCAN • 2026</div>
-        <h1 class="brand-title" id="appBrandTitle">TECHNO SPLURGE</h1>
+        <div class="brand-badge" id="appBrandBadge">YUKTIVEDA CLUB • 2026</div>
+        <h1 class="brand-title" id="appBrandTitle">YUKTIVEDA CLUB</h1>
         <p class="brand-subtitle" id="appBrandSubtitle">GATE ENTRY & ARENA ATTENDANCE SCANNER</p>
       </div>
       
@@ -72,13 +72,13 @@
         <!-- Event Pills dynamically injected or updated -->
         <button class="event-pill active" data-event="shark_tank" type="button">
           <span class="pill-dot"></span>
-          <span class="pill-title">Yuktiveda Shark Tank</span>
-          <span class="pill-badge">ST26</span>
+          <span class="pill-title">Yuktiveda Club</span>
+          <span class="pill-badge">YC26</span>
         </button>
         <button class="event-pill" data-event="techno_splurge" type="button">
           <span class="pill-dot"></span>
-          <span class="pill-title">Techno Splurge (IIC)</span>
-          <span class="pill-badge">TS26</span>
+          <span class="pill-title">IIC Club</span>
+          <span class="pill-badge">IIC26</span>
         </button>
         <button id="btnEventConfigModal" class="event-pill pill-add" type="button" title="Configure Events & Form Sheets">
           <span>⚙️ Event Sheets</span>
@@ -253,8 +253,8 @@
             <div class="ticket-details-box">
               <div class="ticket-header">
                 <div class="ticket-title-group">
-                  <span class="ticket-event-tag">TECHNO SPLURGE 2026</span>
-                  <div class="ticket-reg-id" id="displayRegId">TS26-0001</div>
+                  <span class="ticket-event-tag">EVENT PASS • 2026</span>
+                  <div class="ticket-reg-id" id="displayRegId">YC26-0001</div>
                 </div>
                 <div class="payment-badge" id="displayPaymentBadge">₹119 • VERIFIED</div>
               </div>
@@ -376,7 +376,7 @@
         <div class="modal-body">
           <!-- Active Event Configuration -->
           <div class="form-group" style="background: var(--bg-card-subtle); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-            <label style="color: var(--emerald-primary); font-weight: 800;">ACTIVE EVENT: <span id="settingsActiveEventName">Yuktiveda Shark Tank</span></label>
+            <label style="color: var(--emerald-primary); font-weight: 800;">ACTIVE EVENT: <span id="settingsActiveEventName">Yuktiveda Club</span></label>
             <label for="apiUrlInput" style="margin-top: 8px;">Google Apps Script Web App URL for this event:</label>
             <input 
               type="url" 
@@ -393,11 +393,11 @@
           <div class="participant-grid" style="gap: 12px; margin-top: 0;">
             <div class="form-group">
               <label for="eventPrefixInput">Ticket ID Prefix</label>
-              <input type="text" id="eventPrefixInput" class="form-control font-mono" placeholder="e.g. ST26- or TS26-">
+              <input type="text" id="eventPrefixInput" class="form-control font-mono" placeholder="e.g. YC26- or IIC26-">
             </div>
             <div class="form-group">
               <label for="eventSubtitleInput">Event Tagline / Subtitle</label>
-              <input type="text" id="eventSubtitleInput" class="form-control" placeholder="e.g. Pitching Arena & Investor Check-in">
+              <input type="text" id="eventSubtitleInput" class="form-control" placeholder="e.g. Official Event Check-In">
             </div>
           </div>
 
@@ -418,7 +418,7 @@
           <div class="modal-info-box">
             <h4>💡 Multi-Event Google Forms Architecture:</h4>
             <ol>
-              <li><strong>Concurrent Events:</strong> Open <em>Yuktiveda Shark Tank</em> on one device and <em>Techno Splurge</em> on another, or toggle between them anytime.</li>
+              <li><strong>Concurrent Events:</strong> Open <em>Yuktiveda Club</em> on one device and <em>IIC Club</em> on another, or toggle between them anytime.</li>
               <li><strong>Separate Google Forms:</strong> Each event links to its own Google Sheet response tab.</li>
               <li><strong>Audit Logging:</strong> Every scan is stamped with the active coordinator (Vishnu, Nikhil, etc.).</li>
             </ol>
@@ -460,20 +460,20 @@
             <span class="coord-pill-tag tag-ops">Operations</span>
           </div>
 
-          <div class="coord-card" data-id="volunteer_shark" data-name="Shark Tank Staff" data-role="Event Staff">
+          <div class="coord-card" data-id="volunteer_shark" data-name="Yuktiveda Club Staff" data-role="Event Staff">
             <div class="coord-avatar-large avatar-volunteer" style="background: linear-gradient(135deg, #059669, #10b981);">🦈</div>
             <div class="coord-details">
-              <strong>Volunteer: Shark Tank</strong>
-              <span class="coord-role-text">Event Staff (Shark Tank Only)</span>
+              <strong>Volunteer: Yuktiveda Club</strong>
+              <span class="coord-role-text">Event Staff (Yuktiveda Club Only)</span>
             </div>
             <span class="coord-pill-tag tag-lead">Staff Access</span>
           </div>
 
-          <div class="coord-card" data-id="volunteer_techno" data-name="Techno Splurge Staff" data-role="Event Staff">
+          <div class="coord-card" data-id="volunteer_techno" data-name="IIC Club Staff" data-role="Event Staff">
             <div class="coord-avatar-large avatar-volunteer" style="background: linear-gradient(135deg, #0284c7, #0ea5e9);">⚡</div>
             <div class="coord-details">
-              <strong>Volunteer: Techno Splurge</strong>
-              <span class="coord-role-text">Event Staff (IIC Splurge Only)</span>
+              <strong>Volunteer: IIC Club</strong>
+              <span class="coord-role-text">Event Staff (IIC Club Only)</span>
             </div>
             <span class="coord-pill-tag tag-ops">Staff Access</span>
           </div>
@@ -520,8 +520,8 @@
             <div class="form-group">
               <label for="shareEventSelect">Target Event</label>
               <select id="shareEventSelect" class="form-select font-bold">
-                <option value="shark_tank">Yuktiveda Shark Tank</option>
-                <option value="techno_splurge">Techno Splurge (IIC)</option>
+                <option value="shark_tank">Yuktiveda Club</option>
+                <option value="techno_splurge">IIC Club</option>
               </select>
             </div>
             <div class="form-group">
