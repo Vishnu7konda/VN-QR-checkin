@@ -147,76 +147,93 @@ const elements = {
 const SoundFX = {
   ctx: null,
   init() {
-    if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch (e) {
+      console.warn("AudioContext init error:", e);
     }
   },
   playSuccess() {
     if (!state.audioEnabled) return;
-    this.init();
-    if (!this.ctx) return;
-    if (this.ctx.state === "suspended") this.ctx.resume();
+    try {
+      this.init();
+      if (!this.ctx) return;
 
-    const now = this.ctx.currentTime;
-    // Harmonic Major 9th Chord (E5 -> B5 -> G#6 shimmer)
-    const tones = [
-      { freq: 659.25, start: 0, dur: 0.22, gain: 0.18 },
-      { freq: 987.77, start: 0.08, dur: 0.35, gain: 0.22 },
-      { freq: 1661.22, start: 0.16, dur: 0.45, gain: 0.14 }
-    ];
+      const now = this.ctx.currentTime;
+      // Harmonic Major 9th Chord (E5 -> B5 -> G#6 shimmer)
+      const tones = [
+        { freq: 659.25, start: 0, dur: 0.22, gain: 0.18 },
+        { freq: 987.77, start: 0.08, dur: 0.35, gain: 0.22 },
+        { freq: 1661.22, start: 0.16, dur: 0.45, gain: 0.14 }
+      ];
 
-    tones.forEach(t => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(t.freq, now + t.start);
-      gain.gain.setValueAtTime(t.gain, now + t.start);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + t.start + t.dur);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now + t.start);
-      osc.stop(now + t.start + t.dur);
-    });
+      tones.forEach(t => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(t.freq, now + t.start);
+        gain.gain.setValueAtTime(t.gain, now + t.start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + t.start + t.dur);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + t.start);
+        osc.stop(now + t.start + t.dur);
+      });
+    } catch (e) {
+      console.warn("SoundFX playSuccess error:", e);
+    }
   },
   playWarning() {
     if (!state.audioEnabled) return;
-    this.init();
-    if (!this.ctx) return;
-    if (this.ctx.state === "suspended") this.ctx.resume();
+    try {
+      this.init();
+      if (!this.ctx) return;
 
-    const now = this.ctx.currentTime;
-    // Velvet Dual Pulse (Soft amber alert)
-    [0, 0.16].forEach(delay => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(466.16, now + delay); // Bb4
-      gain.gain.setValueAtTime(0.25, now + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.14);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now + delay);
-      osc.stop(now + delay + 0.14);
-    });
+      const now = this.ctx.currentTime;
+      // Velvet Dual Pulse (Soft amber alert)
+      [0, 0.16].forEach(delay => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(466.16, now + delay); // Bb4
+        gain.gain.setValueAtTime(0.25, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.14);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + delay);
+        osc.stop(now + delay + 0.14);
+      });
+    } catch (e) {
+      console.warn("SoundFX playWarning error:", e);
+    }
   },
   playError() {
     if (!state.audioEnabled) return;
-    this.init();
-    if (!this.ctx) return;
-    if (this.ctx.state === "suspended") this.ctx.resume();
+    try {
+      this.init();
+      if (!this.ctx) return;
 
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(140, now);
-    osc.frequency.exponentialRampToValueAtTime(70, now + 0.32);
-    gain.gain.setValueAtTime(0.22, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.32);
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(70, now + 0.32);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.32);
+    } catch (e) {
+      console.warn("SoundFX playError error:", e);
+    }
   }
 };
 
@@ -229,9 +246,18 @@ document.addEventListener("DOMContentLoaded", () => {
   updateStats();
   renderHistory();
   
-  // Spacebar quick-reset shortcut
+  // Unlock audio context on initial mobile gesture or keyboard interaction
+  const unlockAudio = () => {
+    SoundFX.init();
+    window.removeEventListener("pointerdown", unlockAudio);
+    window.removeEventListener("keydown", unlockAudio);
+  };
+  window.addEventListener("pointerdown", unlockAudio, { once: true, passive: true });
+  window.addEventListener("keydown", unlockAudio, { once: true, passive: true });
+
+  // Spacebar and Enter quick-reset shortcut
   window.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT") {
+    if ((e.code === "Space" || e.code === "Enter") && e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT") {
       e.preventDefault();
       resetToIdle();
     }
@@ -275,7 +301,8 @@ function initUI() {
     e.preventDefault();
     const rawVal = elements.manualRegId.value.trim();
     if (rawVal) {
-      handleRegistrationCode(rawVal);
+      const extracted = extractRegId(rawVal);
+      handleRegistrationCode(extracted || rawVal);
       elements.manualRegId.value = "";
     }
   });
@@ -341,6 +368,11 @@ function updateConnectionBadge() {
 // ==============================================================================
 // QR Scanner Engine (html5-qrcode)
 // ==============================================================================
+let isCameraTransitioning = false;
+let lastScannedCode = null;
+let lastScannedTimestamp = 0;
+const DUPLICATE_COOLDOWN_MS = 3200;
+
 async function initScanner() {
   elements.cameraLoading.style.display = "flex";
 
@@ -359,11 +391,17 @@ async function initScanner() {
     console.warn("Could not list camera devices:", err);
   }
 
-  state.html5QrCode = new Html5Qrcode("qr-reader");
-  startCamera();
+  try {
+    state.html5QrCode = new Html5Qrcode("qr-reader");
+    await startCamera();
+  } catch (err) {
+    console.error("Html5Qrcode initialization error:", err);
+  }
 }
 
-function startCamera() {
+async function startCamera() {
+  if (isCameraTransitioning) return;
+  isCameraTransitioning = true;
   elements.cameraLoading.style.display = "flex";
   
   const qrConfig = {
@@ -376,48 +414,76 @@ function startCamera() {
     ? { deviceId: { exact: state.currentCameraId } }
     : { facingMode: state.currentFacingMode };
 
-  state.html5QrCode.start(
-    cameraSelector,
-    qrConfig,
-    onScanSuccess,
-    onScanFailure
-  ).then(() => {
+  try {
+    await state.html5QrCode.start(
+      cameraSelector,
+      qrConfig,
+      onScanSuccess,
+      onScanFailure
+    );
     state.isScanning = true;
     elements.cameraLoading.style.display = "none";
     elements.scannerOverlay.style.display = "flex";
     updateScanButtonUI(true);
-  }).catch(err => {
-    console.error("Camera start failed:", err);
+  } catch (err) {
+    console.warn("Camera start failed with primary selector, attempting fallback...", err);
+    if (state.currentCameraId) {
+      state.currentCameraId = null;
+      try {
+        await state.html5QrCode.start(
+          { facingMode: "environment" },
+          qrConfig,
+          onScanSuccess,
+          onScanFailure
+        );
+        state.isScanning = true;
+        elements.cameraLoading.style.display = "none";
+        elements.scannerOverlay.style.display = "flex";
+        updateScanButtonUI(true);
+        return;
+      } catch (fallbackErr) {
+        console.error("Camera fallback start failed:", fallbackErr);
+      }
+    }
     elements.cameraLoading.innerHTML = `
-      <div style="color: #f43f5e; font-weight: 700; font-size: 0.95rem;">Camera Stream Paused</div>
-      <p style="font-size: 0.8rem; text-align: center; padding: 0 20px; color: #94a3b8;">
+      <div style="color: #e11d48; font-weight: 700; font-size: 0.95rem;">Camera Stream Paused</div>
+      <p style="font-size: 0.8rem; text-align: center; padding: 0 20px; color: #64748b;">
         Use manual Registration ID entry below or click "Upload QR Image".
       </p>
     `;
     updateScanButtonUI(false);
-  });
-}
-
-function stopCamera() {
-  if (state.html5QrCode && state.isScanning) {
-    return state.html5QrCode.stop().then(() => {
-      state.isScanning = false;
-      elements.scannerOverlay.style.display = "none";
-      updateScanButtonUI(false);
-    }).catch(err => console.warn("Camera stop error:", err));
+  } finally {
+    isCameraTransitioning = false;
   }
-  return Promise.resolve();
 }
 
-function toggleScanning() {
+async function stopCamera() {
+  if (!state.html5QrCode) return;
+  try {
+    const isRunning = state.isScanning || (state.html5QrCode.getState && state.html5QrCode.getState() === 2);
+    if (isRunning) {
+      await state.html5QrCode.stop();
+    }
+  } catch (err) {
+    console.warn("Camera stop error:", err);
+  } finally {
+    state.isScanning = false;
+    elements.scannerOverlay.style.display = "none";
+    updateScanButtonUI(false);
+  }
+}
+
+async function toggleScanning() {
+  if (isCameraTransitioning) return;
   if (state.isScanning) {
-    stopCamera();
+    await stopCamera();
   } else {
-    startCamera();
+    await startCamera();
   }
 }
 
 async function switchCamera() {
+  if (isCameraTransitioning) return;
   if (state.availableCameras.length > 1) {
     const currentIndex = state.availableCameras.findIndex(c => c.id === state.currentCameraId);
     const nextIndex = (currentIndex + 1) % state.availableCameras.length;
@@ -428,7 +494,7 @@ async function switchCamera() {
   }
 
   await stopCamera();
-  startCamera();
+  await startCamera();
 }
 
 function updateScanButtonUI(scanning) {
@@ -445,6 +511,14 @@ function onScanSuccess(decodedText) {
   if (state.isProcessingScan) return;
   const regId = extractRegId(decodedText);
   if (!regId) return;
+
+  const now = Date.now();
+  if (regId === lastScannedCode && (now - lastScannedTimestamp) < DUPLICATE_COOLDOWN_MS) {
+    return; // Prevent repetitive triggers while user holds phone steady
+  }
+
+  lastScannedCode = regId;
+  lastScannedTimestamp = now;
   handleRegistrationCode(regId);
 }
 
@@ -456,21 +530,46 @@ function extractRegId(text) {
   if (!text) return null;
   const clean = text.trim();
 
-  // Pattern: TS26-XXXX
-  const tsMatch = clean.match(/TS26-[A-Za-z0-9]+/i);
+  // 1. JSON payload support: {"regId":"TS26-0001"} or {"id":"TS26-0001"}
+  if (clean.startsWith("{") && clean.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(clean);
+      if (parsed && typeof parsed === "object") {
+        const candidate = parsed.regId || parsed.registrationId || parsed.id || parsed.ticketId || parsed.ticket;
+        if (candidate) return String(candidate).trim().toUpperCase();
+      }
+    } catch (e) {}
+  }
+
+  // 2. Standard Pattern: TS26-XXXX or TS2026-XXXX or TS-XXXX
+  const tsMatch = clean.match(/TS(26|2026)?-[A-Za-z0-9]+/i);
   if (tsMatch) return tsMatch[0].toUpperCase();
 
+  // 3. URL query parameters
   try {
     const url = new URL(clean);
-    const idFromParam = url.searchParams.get("regId") || url.searchParams.get("id");
+    const idFromParam = url.searchParams.get("regId") || 
+                        url.searchParams.get("id") || 
+                        url.searchParams.get("ticket") || 
+                        url.searchParams.get("code") ||
+                        url.searchParams.get("registrationId");
     if (idFromParam) return idFromParam.trim().toUpperCase();
+
+    // Check last path segment: e.g. https://domain.com/ticket/TS26-0001
+    const segments = url.pathname.split("/").filter(Boolean);
+    if (segments.length > 0) {
+      const last = segments[segments.length - 1];
+      const match = last.match(/TS(26|2026)?-[A-Za-z0-9]+/i);
+      if (match) return match[0].toUpperCase();
+    }
   } catch (e) {}
 
-  if (clean.length >= 4 && clean.length <= 25 && !clean.includes(" ")) {
+  // 4. Standalone registration token without whitespace
+  if (clean.length >= 4 && clean.length <= 30 && !clean.includes(" ")) {
     return clean.toUpperCase();
   }
 
-  return clean;
+  return clean.toUpperCase();
 }
 
 async function handleFileUpload(e) {
@@ -527,7 +626,7 @@ async function handleRegistrationCode(rawId) {
       success: false,
       status: "NETWORK_ERROR",
       regId: regId,
-      message: "Could not connect to Google Sheets. Check network or Web App URL."
+      message: err.message || "Could not connect to Google Sheets. Check network or Web App URL."
     });
   }
 }
@@ -540,16 +639,30 @@ async function checkinViaGoogleAppsScript(regId) {
     endpoint.searchParams.set("activity", state.activeArena);
   }
 
-  const response = await fetch(endpoint.toString(), {
-    method: "GET",
-    headers: { "Accept": "application/json" }
-  });
+  // 12-second AbortController timeout to prevent infinite UI hangs
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-  if (!response.ok) {
-    throw new Error(`HTTP Error: ${response.status}`);
+  try {
+    const response = await fetch(endpoint.toString(), {
+      method: "GET",
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Google Sheets HTTP Error: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      throw new Error("Request timed out (12s). Google Sheets is taking longer to respond. Please scan again.");
+    }
+    throw err;
   }
-
-  return await response.json();
 }
 
 function checkinViaDemoDatabase(regId) {
@@ -819,7 +932,11 @@ function resetToIdle() {
   elements.stateLoading.style.display = "none";
   elements.stateIdle.style.display = "flex";
   state.isProcessingScan = false;
-  elements.manualRegId.focus();
+  lastScannedCode = null;
+  lastScannedTimestamp = 0;
+  if (elements.manualRegId) {
+    elements.manualRegId.focus();
+  }
 }
 
 function triggerConfetti() {
@@ -838,20 +955,30 @@ function triggerConfetti() {
 // ==============================================================================
 function updateStats() {
   if (state.apiUrl && state.apiUrl.startsWith("http")) {
-    fetch(`${state.apiUrl}?action=stats`)
-      .then(res => res.json())
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    fetch(`${state.apiUrl}?action=stats`, { signal: controller.signal })
+      .then(res => {
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
-        if (data.success) {
+        if (data && data.success) {
           const tot = data.totalRegistrations !== undefined ? data.totalRegistrations : (data.total || 0);
           const chk = data.checkedIn !== undefined ? data.checkedIn : 0;
           const pnd = data.pendingEntry !== undefined ? data.pendingEntry : (data.pending !== undefined ? data.pending : Math.max(0, tot - chk));
           
-          elements.statTotal.textContent = tot;
-          elements.statCheckedIn.textContent = chk;
-          elements.statPending.textContent = pnd;
+          if (elements.statTotal) elements.statTotal.textContent = tot;
+          if (elements.statCheckedIn) elements.statCheckedIn.textContent = chk;
+          if (elements.statPending) elements.statPending.textContent = pnd;
         }
       })
-      .catch(err => console.warn("Failed to fetch live stats:", err));
+      .catch(err => {
+        clearTimeout(timeoutId);
+        console.warn("Failed to fetch live stats:", err.message);
+      });
   } else {
     const records = Object.values(state.demoDatabase);
     const total = records.length;
@@ -861,9 +988,9 @@ function updateStats() {
     } else {
       checkedIn = records.filter(r => r.arenaAttendance && r.arenaAttendance[state.activeArena] === "PRESENT").length;
     }
-    elements.statTotal.textContent = total;
-    elements.statCheckedIn.textContent = checkedIn;
-    elements.statPending.textContent = Math.max(0, total - checkedIn);
+    if (elements.statTotal) elements.statTotal.textContent = total;
+    if (elements.statCheckedIn) elements.statCheckedIn.textContent = checkedIn;
+    if (elements.statPending) elements.statPending.textContent = Math.max(0, total - checkedIn);
   }
 }
 
@@ -875,7 +1002,9 @@ function addHistoryRecord(record) {
 }
 
 function renderHistory(filterText = "") {
-  elements.historyCountBadge.textContent = `${state.history.length} scans`;
+  if (elements.historyCountBadge) {
+    elements.historyCountBadge.textContent = `${state.history.length} scans`;
+  }
   
   const q = filterText.toLowerCase().trim();
   const filtered = state.history.filter(item => {
@@ -888,6 +1017,8 @@ function renderHistory(filterText = "") {
     );
   });
 
+  if (!elements.historyTableBody) return;
+
   if (!filtered.length) {
     elements.historyTableBody.innerHTML = `
       <tr class="empty-row">
@@ -899,14 +1030,14 @@ function renderHistory(filterText = "") {
 
   elements.historyTableBody.innerHTML = filtered.map(item => `
     <tr>
-      <td class="font-mono">${escapeHtml(item.time)}</td>
+      <td class="font-mono">${escapeHtml(item.time || '—')}</td>
       <td><span class="badge" style="background: var(--brand-subtle); color: var(--brand-light); border-color: var(--border-brand);">${escapeHtml(item.mode || "Gate")}</span></td>
-      <td class="font-mono font-bold">${escapeHtml(item.regId)}</td>
-      <td><strong>${escapeHtml(item.name)}</strong></td>
-      <td class="font-mono">${escapeHtml(item.rollNo)}</td>
-      <td>${escapeHtml(item.section)}</td>
-      <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.arenas)}">${escapeHtml(item.arenas)}</td>
-      <td><span class="status-tag ${item.statusClass}">${escapeHtml(item.status)}</span></td>
+      <td class="font-mono font-bold">${escapeHtml(item.regId || '—')}</td>
+      <td><strong>${escapeHtml(item.name || 'Participant')}</strong></td>
+      <td class="font-mono">${escapeHtml(item.rollNo || '—')}</td>
+      <td>${escapeHtml(item.section || '—')}</td>
+      <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.arenas || '—')}">${escapeHtml(item.arenas || '—')}</td>
+      <td><span class="status-tag ${item.statusClass || 'tag-success'}">${escapeHtml(item.status || 'CHECKED IN')}</span></td>
     </tr>
   `).join("");
 }
@@ -931,14 +1062,14 @@ function exportHistoryCsv() {
 
   const headers = ["Time", "Mode", "Registration ID", "Name", "Roll Number", "Section", "Selected Arenas", "Status"];
   const rows = state.history.map(h => [
-    `"${h.time}"`,
+    `"${h.time || ''}"`,
     `"${h.mode || 'Gate'}"`,
-    `"${h.regId}"`,
-    `"${h.name}"`,
-    `"${h.rollNo}"`,
-    `"${h.section}"`,
+    `"${h.regId || ''}"`,
+    `"${(h.name || '').replace(/"/g, '""')}"`,
+    `"${h.rollNo || ''}"`,
+    `"${h.section || ''}"`,
     `"${(h.arenas || '').replace(/"/g, '""')}"`,
-    `"${h.status}"`
+    `"${h.status || ''}"`
   ]);
 
   const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -979,8 +1110,12 @@ async function testConnection() {
   elements.btnTestConnection.textContent = "Testing...";
   elements.btnTestConnection.disabled = true;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
   try {
-    const res = await fetch(`${testUrl}?action=ping`);
+    const res = await fetch(`${testUrl}?action=ping`, { signal: controller.signal });
+    clearTimeout(timeoutId);
     const data = await res.json();
     if (data && data.success) {
       alert("✅ Connection Successful!\nGoogle Sheets API is responsive.");
@@ -988,7 +1123,12 @@ async function testConnection() {
       alert("⚠️ Received unexpected response:\n" + JSON.stringify(data));
     }
   } catch (err) {
-    alert("❌ Connection Failed!\nEnsure you deployed the Web App with access set to 'Anyone'. Error: " + err.message);
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      alert("❌ Connection Test Timed Out (10s).\nThe Google Apps Script server took too long to respond.");
+    } else {
+      alert("❌ Connection Failed!\nEnsure you deployed the Web App with access set to 'Anyone'.\nDetails: " + err.message);
+    }
   } finally {
     elements.btnTestConnection.textContent = "Test Connection";
     elements.btnTestConnection.disabled = false;

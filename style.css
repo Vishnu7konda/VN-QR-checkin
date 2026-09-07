@@ -46,6 +46,15 @@
   --rose-badge-bg: #ffe4e6;
   --rose-glow: rgba(225, 29, 72, 0.2);
 
+  /* Brand & Status Aliases for dynamic JS bindings */
+  --brand-primary: var(--emerald-primary);
+  --brand-light: var(--emerald-light);
+  --brand-subtle: var(--emerald-subtle);
+  --border-brand: var(--border-emerald);
+  --emerald-main: var(--emerald-primary);
+  --amber-main: var(--amber-primary);
+  --rose-main: var(--rose-primary);
+
   /* Geometry */
   --radius-xs: 6px;
   --radius-sm: 10px;
