@@ -21,7 +21,7 @@ const DEFAULT_EVENTS = {
     brandTitle: "YUKTIVEDA CLUB",
     brandSubtitle: "GATE ENTRY & PITCH ROUNDS SCANNER",
     prefix: "ST26-",
-    apiUrl: localStorage.getItem("ts_api_url_shark_tank") || "",
+    apiUrl: localStorage.getItem("ts_api_url_shark_tank") || "https://script.google.com/macros/s/AKfycbyXkWuH4M4UcIiL17Baz49nVvS_UPQaj8mSHVhqi_3uP2RpqkJYXzirexIZNwM7fCzp/exec",
     gateLabel: "Main Gate Entry",
     arenaModeLabel: "Pitch Rounds",
     arenas: ["Shark Tank Pitching", "Round 1: 3-Minute Pitch", "Round 2: Shark Q&A", "Round 3: Valuation Battle"],
@@ -357,10 +357,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const paramArena = urlParams.get("arena");
   const paramCoord = urlParams.get("coord");
 
-  // Synchronize official club naming across sessions
+  // Synchronize official club naming & API URLs across sessions
   if (state.events.shark_tank) {
     state.events.shark_tank.name = "Yuktiveda Club";
     state.events.shark_tank.brandTitle = "YUKTIVEDA CLUB";
+    if (!state.events.shark_tank.apiUrl || state.events.shark_tank.apiUrl.trim() === "") {
+      state.events.shark_tank.apiUrl = "https://script.google.com/macros/s/AKfycbyXkWuH4M4UcIiL17Baz49nVvS_UPQaj8mSHVhqi_3uP2RpqkJYXzirexIZNwM7fCzp/exec";
+    }
   }
   if (state.events.techno_splurge) {
     state.events.techno_splurge.name = "IIC Club";
