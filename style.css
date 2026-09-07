@@ -1629,80 +1629,291 @@ body {
 }
 
 /* ==============================================================================
-   Responsive Adaptations
+   Comprehensive Responsive System (Mobile, Foldables, Tablets, Laptops & Desktops)
    ============================================================================== */
-@media (max-width: 980px) {
-  .main-grid {
-    grid-template-columns: 1fr;
-  }
-  .scanner-viewport-wrapper {
-    aspect-ratio: 1/1;
-  }
-  .scanner-box {
-    width: 220px;
-    height: 220px;
+
+/* Modal responsiveness enhancements (All screens) */
+.modal-overlay {
+  padding: clamp(10px, 3vw, 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-card {
+  width: min(100%, 560px);
+  max-height: min(92vh, 880px);
+  margin: auto;
+}
+
+.coord-login-card {
+  width: min(100%, 520px);
+  max-height: min(94vh, 920px);
+  overflow-y: auto;
+}
+
+/* 1. Large Desktops & Wide Screens (>= 1400px) */
+@media (min-width: 1400px) {
+  .app-container {
+    max-width: 1440px;
+    padding: 32px 40px 80px;
   }
 }
 
-@media (max-width: 640px) {
+/* 2. Standard Laptops & Tablets Landscape (<= 1100px) */
+@media (max-width: 1100px) {
   .app-container {
-    padding: 16px 14px 48px;
+    padding: 20px 22px 60px;
   }
+  .main-grid {
+    gap: 20px;
+  }
+  .stats-bar {
+    gap: 14px;
+  }
+  .stat-value {
+    font-size: 2.1rem;
+  }
+}
+
+/* 3. Tablets Portrait & Smaller Screens (<= 980px) */
+@media (max-width: 980px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .scanner-card {
+    order: 1;
+  }
+  .result-card {
+    order: 2;
+    min-height: auto;
+  }
+  .scanner-viewport-wrapper {
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+    aspect-ratio: 1/1;
+  }
+  .scanner-box {
+    width: min(240px, 70vw);
+    height: min(240px, 70vw);
+  }
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+/* 4. Large Phones & Small Tablets (<= 768px) */
+@media (max-width: 768px) {
   .top-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
+    align-items: stretch;
+    gap: 16px;
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+  }
+  .brand-block {
+    text-align: center;
+    align-items: center;
+  }
+  .brand-badge {
+    align-self: center;
+  }
+  .brand-title {
+    font-size: 1.7rem;
   }
   .header-actions {
     width: 100%;
+    justify-content: center;
+    gap: 8px;
+  }
+  .coordinator-badge {
+    flex: 1 1 auto;
     justify-content: space-between;
-    flex-wrap: wrap;
+  }
+  .btn-share-header {
+    flex: 1 1 auto;
+    justify-content: center;
   }
   .event-switcher-nav {
     flex-direction: column;
     align-items: stretch;
+    padding: 12px 14px;
     gap: 10px;
   }
+  .event-switcher-label {
+    justify-content: center;
+  }
   .event-pills-group {
-    justify-content: flex-start;
+    justify-content: center;
+  }
+  .event-pill {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+  .stats-bar {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .stat-card {
+    padding: 12px 10px;
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 0.68rem;
+  }
+  .stat-value {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px 16px;
+  }
+}
+
+/* 5. Mobile Phones (<= 640px) */
+@media (max-width: 640px) {
+  .app-container {
+    padding: 12px 12px 48px;
   }
   .mode-selector-bar {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+    padding: 8px;
   }
   .mode-toggle-group {
     flex-direction: column;
+    width: 100%;
+  }
+  .mode-btn {
+    width: 100%;
+    padding: 10px 14px;
   }
   .arena-dropdown-wrap {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
   }
   .stats-bar {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 8px;
   }
   .stat-card {
-    padding: 14px 18px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    text-align: left;
   }
   .stat-value {
-    font-size: 1.8rem;
+    font-size: 1.65rem;
   }
   .scanner-btn-group {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
   .participant-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .scanner-controls-top {
+    width: 100%;
+    justify-content: space-between;
   }
   .history-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
   .history-actions {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
+    gap: 8px;
   }
   .history-filter-input {
     min-width: 100%;
+    width: 100%;
+  }
+  .history-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Modal Form on Mobile */
+  .coord-login-card {
+    padding: 24px 16px 20px;
+  }
+  .login-title {
+    font-size: 1.25rem;
+  }
+  .login-desc {
+    font-size: 0.8rem;
+  }
+  .coord-card {
+    padding: 10px 12px;
+  }
+  .coord-avatar-large {
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+    margin-right: 10px;
+  }
+  .coord-details strong {
+    font-size: 0.88rem;
+  }
+  .coord-role-text {
+    font-size: 0.72rem;
+  }
+  .coord-pill-tag {
+    font-size: 0.68rem;
+    padding: 3px 8px;
+  }
+  .input-with-btn {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .input-with-btn .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 6. Ultra-Compact Devices & Small Foldables (<= 380px) */
+@media (max-width: 380px) {
+  .app-container {
+    padding: 10px 8px 36px;
+  }
+  .brand-title {
+    font-size: 1.45rem;
+  }
+  .brand-subtitle {
+    font-size: 0.72rem;
+  }
+  .btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  .coord-card {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .coord-pill-tag {
+    margin-left: auto;
+  }
+  .close-login-btn {
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    font-size: 1.1rem;
   }
 }
