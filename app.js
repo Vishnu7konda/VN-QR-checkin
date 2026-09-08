@@ -13,49 +13,6 @@ const COORDINATORS = {
 
 // Multi-Event Registry (Concurrent Events with Separate Google Sheets & Forms)
 const DEFAULT_EVENTS = {
-  shark_tank: {
-    id: "shark_tank",
-    club: "IIC Club",
-    name: "Shark Tank",
-    brandBadge: "SHARK TANK • 2026",
-    brandTitle: "SHARK TANK",
-    brandSubtitle: "GATE ENTRY & PITCH ROUNDS SCANNER",
-    prefix: "ST26-",
-    apiUrl: localStorage.getItem("ts_api_url_shark_tank") || "https://script.google.com/macros/s/AKfycbyXkWuH4M4UcIiL17Baz49nVvS_UPQaj8mSHVhqi_3uP2RpqkJYXzirexIZNwM7fCzp/exec",
-    gateLabel: "Main Gate Entry",
-    arenaModeLabel: "Pitch Rounds",
-    arenas: ["Shark Tank Pitching", "Round 1: 3-Minute Pitch", "Round 2: Shark Q&A", "Round 3: Valuation Battle"],
-    volunteerPin: "1111",
-    isBuiltin: true,
-    demoDatabase: {
-      "ST26-0001": {
-        registrationId: "ST26-0001",
-        name: "EcoTech Innovations",
-        roll: "Team Alpha (Lead: Rohan)",
-        year: "Startup Track",
-        section: "Hardware & IoT",
-        activities: "Round 1: 3-Minute Pitch, Round 2: Shark Q&A, Round 3: Valuation Battle",
-        arenas: ["Round 1: 3-Minute Pitch", "Round 2: Shark Q&A", "Round 3: Valuation Battle"],
-        paymentStatus: "VERIFIED",
-        entryStatus: "NOT CHECKED IN",
-        entryTime: "",
-        arenaAttendance: {}
-      },
-      "ST26-0002": {
-        registrationId: "ST26-0002",
-        name: "BioHealth Diagnostics",
-        roll: "Team Beta (Lead: Sneha)",
-        year: "HealthTech Track",
-        section: "Biotech & AI",
-        activities: "Round 1: 3-Minute Pitch, Round 2: Shark Q&A",
-        arenas: ["Round 1: 3-Minute Pitch", "Round 2: Shark Q&A"],
-        paymentStatus: "VERIFIED",
-        entryStatus: "NOT CHECKED IN",
-        entryTime: "",
-        arenaAttendance: {}
-      }
-    }
-  },
   techno_splurge: {
     id: "techno_splurge",
     club: "IIC Club",
@@ -112,6 +69,8 @@ function loadEvents() {
       console.warn("Failed to parse saved events:", e);
     }
   }
+  // Remove legacy events if present in cached local storage
+  delete events.shark_tank;
   return events;
 }
 
@@ -357,16 +316,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const paramArena = urlParams.get("arena");
   const paramCoord = urlParams.get("coord");
 
+  // Clean up legacy shark_tank from state
+  delete state.events.shark_tank;
+
   // Synchronize official event naming & API URLs across sessions
-  if (state.events.shark_tank) {
-    state.events.shark_tank.club = "IIC Club";
-    state.events.shark_tank.name = "Shark Tank";
-    state.events.shark_tank.brandBadge = "SHARK TANK • 2026";
-    state.events.shark_tank.brandTitle = "SHARK TANK";
-    if (!state.events.shark_tank.apiUrl || state.events.shark_tank.apiUrl.trim() === "") {
-      state.events.shark_tank.apiUrl = "https://script.google.com/macros/s/AKfycbyXkWuH4M4UcIiL17Baz49nVvS_UPQaj8mSHVhqi_3uP2RpqkJYXzirexIZNwM7fCzp/exec";
-    }
-  }
   if (state.events.techno_splurge) {
     state.events.techno_splurge.name = "Techno Splurge";
     state.events.techno_splurge.brandBadge = "IIC CLUB • 2026";
@@ -376,6 +329,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Set active event from URL if present
   if (paramEvent && state.events[paramEvent]) {
     state.activeEventId = paramEvent;
+  } else if (!state.events[state.activeEventId]) {
+    state.activeEventId = "techno_splurge";
   }
 
   if (paramCoord && COORDINATORS[paramCoord]) {
@@ -839,7 +794,7 @@ function switchEvent(eventId) {
 
 function switchMode(mode) {
   state.currentMode = mode;
-  const ev = state.events[state.activeEventId] || DEFAULT_EVENTS.shark_tank;
+  const ev = state.events[state.activeEventId] || DEFAULT_EVENTS.techno_splurge;
 
   if (mode === "gate") {
     elements.modeGateBtn.classList.add("active");
@@ -1835,7 +1790,7 @@ function deleteEvent(eventId) {
 
     if (state.activeEventId === eventId) {
       const remainingIds = Object.keys(state.events);
-      switchEvent(remainingIds[0] || "shark_tank");
+      switchEvent(remainingIds[0] || "techno_splurge");
     }
 
     saveEvents();
@@ -1853,7 +1808,7 @@ function saveEvents() {
 }
 
 function openSettingsForActiveEvent() {
-  const ev = state.events[state.activeEventId] || DEFAULT_EVENTS.shark_tank;
+  const ev = state.events[state.activeEventId] || DEFAULT_EVENTS.techno_splurge;
   if (elements.settingsActiveClubTag) elements.settingsActiveClubTag.textContent = (ev.club || "Club Event").toUpperCase();
   if (elements.settingsActiveEventName) elements.settingsActiveEventName.textContent = ev.name;
   if (elements.apiUrlInput) elements.apiUrlInput.value = ev.apiUrl || "";
