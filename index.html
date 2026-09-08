@@ -26,8 +26,8 @@
     <!-- Top Navigation / Header -->
     <header class="top-header">
       <div class="brand-block">
-        <div class="brand-badge" id="appBrandBadge">YUKTIVEDA CLUB • 2026</div>
-        <h1 class="brand-title" id="appBrandTitle">YUKTIVEDA CLUB</h1>
+        <div class="brand-badge" id="appBrandBadge">IIC CLUB • 2026</div>
+        <h1 class="brand-title" id="appBrandTitle">IIC CLUB</h1>
         <p class="brand-subtitle" id="appBrandSubtitle">GATE ENTRY & ARENA ATTENDANCE SCANNER</p>
       </div>
       
@@ -70,15 +70,15 @@
       </div>
       <div class="event-pills-group" id="eventPillsGroup">
         <!-- Event Pills dynamically injected or updated -->
-        <button class="event-pill active" data-event="shark_tank" type="button">
-          <span class="pill-dot"></span>
-          <span class="pill-title">Yuktiveda Club</span>
-          <span class="pill-badge">YC26</span>
-        </button>
-        <button class="event-pill" data-event="techno_splurge" type="button">
+        <button class="event-pill active" data-event="techno_splurge" type="button">
           <span class="pill-dot"></span>
           <span class="pill-title">IIC Club</span>
           <span class="pill-badge">IIC26</span>
+        </button>
+        <button class="event-pill" data-event="shark_tank" type="button">
+          <span class="pill-dot"></span>
+          <span class="pill-title">Shark Tank</span>
+          <span class="pill-badge">ST26</span>
         </button>
         <button id="btnEventConfigModal" class="event-pill pill-add" type="button" title="Configure Events & Form Sheets">
           <span>⚙️ Event Sheets</span>
@@ -387,10 +387,10 @@
           <div id="tabActiveEvent" class="tab-pane">
             <div class="form-group" style="background: var(--bg-card-subtle); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span class="club-badge-tag" id="settingsActiveClubTag">YUKTIVEDA CLUB</span>
+                <span class="club-badge-tag" id="settingsActiveClubTag">IIC CLUB</span>
                 <span style="font-size: 0.72rem; color: var(--emerald-primary); font-weight: 700;">CURRENTLY ACTIVE</span>
               </div>
-              <h4 id="settingsActiveEventName" style="font-size: 1.1rem; color: var(--text-pure); margin-bottom: 8px;">Shark Tank</h4>
+              <h4 id="settingsActiveEventName" style="font-size: 1.1rem; color: var(--text-pure); margin-bottom: 8px;">Techno Splurge</h4>
               <label for="apiUrlInput">Google Apps Script Web App URL:</label>
               <input 
                 type="url" 
@@ -447,13 +447,12 @@
           <!-- TAB 2: ADD NEW EVENT -->
           <div id="tabAddEvent" class="tab-pane" style="display: none;">
             <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; color: #166534;">
-              💡 <strong>Host Concurrent Events:</strong> Add any new event under Yuktiveda, IIC, or a brand new club with its own independent Google Sheet.
+              💡 <strong>Host Concurrent Events:</strong> Add any new event under IIC or a brand new club with its own independent Google Sheet.
             </div>
 
             <div class="form-group">
               <label for="newClubSelect">Parent Club / Organization</label>
               <select id="newClubSelect" class="form-select font-bold">
-                <option value="Yuktiveda Club">Yuktiveda Club</option>
                 <option value="IIC Club">IIC Club</option>
                 <option value="__new__">➕ Add New Club / Organization...</option>
               </select>
@@ -554,11 +553,11 @@
             <span class="coord-pill-tag tag-ops">Operations Lead</span>
           </div>
 
-          <div class="coord-card" data-id="volunteer_shark" data-name="Yuktiveda Club Staff" data-role="Event Staff">
+          <div class="coord-card" data-id="volunteer_shark" data-name="Shark Tank Staff" data-role="Event Staff">
             <div class="coord-avatar-large avatar-volunteer" style="background: linear-gradient(135deg, #059669, #10b981);">🦈</div>
             <div class="coord-details">
-              <strong>Volunteer: Yuktiveda Club</strong>
-              <span class="coord-role-text">Event Staff (Yuktiveda Club Only)</span>
+              <strong>Volunteer: Shark Tank</strong>
+              <span class="coord-role-text">Event Staff (Shark Tank Only)</span>
             </div>
             <span class="coord-pill-tag tag-lead">Staff Access</span>
           </div>
@@ -614,8 +613,8 @@
             <div class="form-group">
               <label for="shareEventSelect">Target Event</label>
               <select id="shareEventSelect" class="form-select font-bold">
-                <option value="shark_tank">Yuktiveda Club</option>
                 <option value="techno_splurge">IIC Club</option>
+                <option value="shark_tank">Shark Tank</option>
               </select>
             </div>
             <div class="form-group">

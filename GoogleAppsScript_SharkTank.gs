@@ -1,6 +1,6 @@
 /*******************************************************
 * =====================================================
-* YUKTIVEDA CLUB — SHARK TANK 2026
+* SHARK TANK 2026
 * COMPLETE EVENT SYSTEM & QR SCANNER API
 * =====================================================
 *
@@ -9,7 +9,7 @@
 * Pitch. Validate. Elevate.
 *
 * Organized by:
-* Yuktiveda Club
+* Shark Tank Coordination Team
 *
 * Google Form Link:
 * https://docs.google.com/forms/d/e/1FAIpQLSeVSJk_eZALpeFa9cfIc1XZEaOwAc-CKXuxgECa3RDOmZjCyg/viewform
@@ -49,7 +49,7 @@ const CONFIG = {
   EVENT_NAME: "SHARK TANK 2026",
   EVENT_TAGLINE: "Pitch. Validate. Elevate.",
   EVENT_YEAR: "2026",
-  ORGANIZER: "YUKTIVEDA CLUB",
+  ORGANIZER: "SHARK TANK 2026",
   
   // Registration fee / Track
   FEE: "Free / Registered",
@@ -74,7 +74,7 @@ const CONFIG = {
 *******************************************************/
 function onOpen() {
   SpreadsheetApp.getUi()
-    .createMenu("🦈 YUKTIVEDA SHARK TANK")
+    .createMenu("🦈 SHARK TANK 2026")
     .addItem(" Setup Automation & Columns", "setupAutomation")
     .addSeparator()
     .addItem(" Generate Ticket for Selected Row", "generateTicketForSelectedRow")
@@ -140,7 +140,7 @@ function setupAutomation() {
   createActivitySheets();
   initializePendingStatuses();
 
-  SpreadsheetApp.getUi().alert("🦈 Yuktiveda Shark Tank automation and columns installed successfully!");
+  SpreadsheetApp.getUi().alert("🦈 Shark Tank automation and columns installed successfully!");
 }
 
 /*******************************************************
@@ -1053,7 +1053,7 @@ function doGet(e) {
         success: true,
         event: CONFIG.EVENT_NAME,
         club: CONFIG.ORGANIZER,
-        message: "Yuktiveda Shark Tank Check-In API is online and ready.",
+        message: "Shark Tank Check-In API is online and ready.",
         timestamp: new Date().toISOString()
       });
     }
@@ -1307,7 +1307,7 @@ function generateTicketForSelectedRow() {
 
 
 /***************************************************************
- * 🦈 SHARK TANK 2026 - YUKTI VEDA CLUB
+ * 🦈 SHARK TANK 2026
  * MULTI-MEMBER TEAM TICKET EXTENSIONS & STANDALONE CHECK-IN UI
  ***************************************************************/
 
@@ -1624,7 +1624,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   <div class="header">
     <div class="logo">🦈</div>
     <div class="title">SHARK TANK 2026</div>
-    <div class="subtitle">Yukti Veda Club · Entry Check-In</div>
+    <div class="subtitle">Shark Tank 2026 · Entry Check-In</div>
   </div>
   <div class="card">
     <label>Volunteer Name</label>

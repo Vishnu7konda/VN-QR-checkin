@@ -15,10 +15,10 @@ const COORDINATORS = {
 const DEFAULT_EVENTS = {
   shark_tank: {
     id: "shark_tank",
-    club: "Yuktiveda Club",
+    club: "IIC Club",
     name: "Shark Tank",
-    brandBadge: "YUKTIVEDA CLUB • 2026",
-    brandTitle: "YUKTIVEDA CLUB",
+    brandBadge: "SHARK TANK • 2026",
+    brandTitle: "SHARK TANK",
     brandSubtitle: "GATE ENTRY & PITCH ROUNDS SCANNER",
     prefix: "ST26-",
     apiUrl: localStorage.getItem("ts_api_url_shark_tank") || "https://script.google.com/macros/s/AKfycbyXkWuH4M4UcIiL17Baz49nVvS_UPQaj8mSHVhqi_3uP2RpqkJYXzirexIZNwM7fCzp/exec",
@@ -119,7 +119,7 @@ function loadEvents() {
 const state = {
   currentUser: null,
   events: loadEvents(),
-  activeEventId: localStorage.getItem("vn_active_event") || "shark_tank",
+  activeEventId: localStorage.getItem("vn_active_event") || "techno_splurge",
   apiUrl: "",
   demoDatabase: {},
   audioEnabled: localStorage.getItem("ts_audio") !== "false",
@@ -357,16 +357,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const paramArena = urlParams.get("arena");
   const paramCoord = urlParams.get("coord");
 
-  // Synchronize official club naming & API URLs across sessions
+  // Synchronize official event naming & API URLs across sessions
   if (state.events.shark_tank) {
-    state.events.shark_tank.name = "Yuktiveda Club";
-    state.events.shark_tank.brandTitle = "YUKTIVEDA CLUB";
+    state.events.shark_tank.club = "IIC Club";
+    state.events.shark_tank.name = "Shark Tank";
+    state.events.shark_tank.brandBadge = "SHARK TANK • 2026";
+    state.events.shark_tank.brandTitle = "SHARK TANK";
     if (!state.events.shark_tank.apiUrl || state.events.shark_tank.apiUrl.trim() === "") {
       state.events.shark_tank.apiUrl = "https://script.google.com/macros/s/AKfycbyXkWuH4M4UcIiL17Baz49nVvS_UPQaj8mSHVhqi_3uP2RpqkJYXzirexIZNwM7fCzp/exec";
     }
   }
   if (state.events.techno_splurge) {
-    state.events.techno_splurge.name = "IIC Club";
+    state.events.techno_splurge.name = "Techno Splurge";
+    state.events.techno_splurge.brandBadge = "IIC CLUB • 2026";
     state.events.techno_splurge.brandTitle = "IIC CLUB";
   }
 
@@ -1674,9 +1677,9 @@ function renderEventPills() {
 
 function populateClubSelect() {
   if (!elements.newClubSelect) return;
-  const clubs = new Set(["Yuktiveda Club", "IIC Club"]);
+  const clubs = new Set(["IIC Club"]);
   Object.values(state.events).forEach(ev => {
-    if (ev.club) clubs.add(ev.club);
+    if (ev.club && !ev.isBuiltin) clubs.add(ev.club);
   });
 
   let html = "";
