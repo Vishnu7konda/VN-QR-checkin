@@ -34,6 +34,8 @@ const DEFAULT_EVENTS = {
         roll: "2411CS030059",
         year: "3rd Year",
         section: "Alpha",
+        email: "sainikhil@mallareddyuniversity.ac.in",
+        phone: "+91 98765 43210",
         activities: "CEO for 10 Minutes, Tech Parody, Open Mic",
         arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic"],
         paymentStatus: "VERIFIED",
@@ -47,9 +49,56 @@ const DEFAULT_EVENTS = {
         roll: "2411cs030183",
         year: "3rd Year",
         section: "Gamma",
+        email: "vishnu@mallareddyuniversity.ac.in",
+        phone: "+91 98765 12345",
         activities: "CEO for 10 Minutes, Tech Parody, Open Mic",
         arenas: ["CEO for 10 Minutes", "Tech Parody", "Open Mic"],
         paymentStatus: "VERIFIED",
+        entryStatus: "NOT CHECKED IN",
+        entryTime: "",
+        arenaAttendance: {}
+      },
+      "TS26-00421": {
+        registrationId: "TS26-00421",
+        name: "Rahul Kumar",
+        roll: "2411CS010421",
+        year: "2nd Year",
+        section: "Beta",
+        email: "rahul.k@mallareddyuniversity.ac.in",
+        phone: "+91 91234 56789",
+        activities: "Tech Parody, Open Mic, Meme War",
+        arenas: ["Tech Parody", "Open Mic", "Meme War"],
+        paymentStatus: "VERIFIED",
+        entryStatus: "NOT CHECKED IN",
+        entryTime: "",
+        arenaAttendance: {}
+      },
+      "TS26-00391": {
+        registrationId: "TS26-00391",
+        name: "Ananya",
+        roll: "2411CS020391",
+        year: "3rd Year",
+        section: "Delta",
+        email: "ananya@mallareddyuniversity.ac.in",
+        phone: "+91 99887 76655",
+        activities: "CEO for 10 Minutes, Tech Parody, Meme War",
+        arenas: ["CEO for 10 Minutes", "Tech Parody", "Meme War"],
+        paymentStatus: "VERIFIED",
+        entryStatus: "CHECKED IN",
+        entryTime: "19:31:08",
+        arenaAttendance: {}
+      },
+      "TS26-00888": {
+        registrationId: "TS26-00888",
+        name: "Rohan Sharma",
+        roll: "2411CS040888",
+        year: "1st Year",
+        section: "Sigma",
+        email: "rohan.s@mallareddyuniversity.ac.in",
+        phone: "+91 98112 23344",
+        activities: "CEO for 10 Minutes, Open Mic, Meme War",
+        arenas: ["CEO for 10 Minutes", "Open Mic", "Meme War"],
+        paymentStatus: "PENDING",
         entryStatus: "NOT CHECKED IN",
         entryTime: "",
         arenaAttendance: {}
@@ -205,7 +254,69 @@ const elements = {
   volunteerQrImage: document.getElementById("volunteerQrImage"),
   shareLinkPreview: document.getElementById("shareLinkPreview"),
   btnCopyVolunteerLink: document.getElementById("btnCopyVolunteerLink"),
-  btnWhatsappShare: document.getElementById("btnWhatsappShare")
+  btnWhatsappShare: document.getElementById("btnWhatsappShare"),
+
+  // Primary Operational Views & Navigation Tabs
+  tabGate: document.getElementById("tabGate"),
+  tabArena: document.getElementById("tabArena"),
+  tabSearch: document.getElementById("tabSearch"),
+  tabHistory: document.getElementById("tabHistory"),
+  tabOverview: document.getElementById("tabOverview"),
+  viewGateCheckIn: document.getElementById("viewGateCheckIn"),
+  viewArenaAttendance: document.getElementById("viewArenaAttendance"),
+  viewRegistrationSearch: document.getElementById("viewRegistrationSearch"),
+  viewRecentActivity: document.getElementById("viewRecentActivity"),
+  viewLiveOverview: document.getElementById("viewLiveOverview"),
+
+  // Header Station & Status Indicators
+  headerStationBadge: document.getElementById("headerStationBadge"),
+  currentStationText: document.getElementById("currentStationText"),
+  lastSyncDisplay: document.getElementById("lastSyncDisplay"),
+  lastSyncTimeText: document.getElementById("lastSyncTimeText"),
+  btnManualSubmit: document.getElementById("btnManualSubmit"),
+
+  // Dedicated Arena View Controls
+  arenaManualForm: document.getElementById("arenaManualForm"),
+  arenaManualRegId: document.getElementById("arenaManualRegId"),
+  arenaViewSelect: document.getElementById("arenaViewSelect"),
+  arenaViewTitle: document.getElementById("arenaViewTitle"),
+  arenaResultPlaceholder: document.getElementById("arenaResultPlaceholder"),
+  arenaResultContent: document.getElementById("arenaResultContent"),
+  statArenaAttendees: document.getElementById("statArenaAttendees"),
+  arenaAttendanceBlock: document.getElementById("arenaAttendanceBlock"),
+
+  // Dedicated Registration Search View Controls
+  regSearchQuery: document.getElementById("regSearchQuery"),
+  btnExecuteSearch: document.getElementById("btnExecuteSearch"),
+  searchResultsList: document.getElementById("searchResultsList"),
+  searchResultCount: document.getElementById("searchResultCount"),
+  searchProfileCard: document.getElementById("searchProfileCard"),
+  searchProfileStatus: document.getElementById("searchProfileStatus"),
+
+  // System Status & Health Modal Controls
+  systemStatusModal: document.getElementById("systemStatusModal"),
+  btnCloseSystemStatus: document.getElementById("btnCloseSystemStatus"),
+  btnCloseSystemStatusFooter: document.getElementById("btnCloseSystemStatusFooter"),
+  btnPingBackend: document.getElementById("btnPingBackend"),
+  scannerStatusBullet: document.getElementById("scannerStatusBullet"),
+  scannerStatusBadge: document.getElementById("scannerStatusBadge"),
+  scannerStatusDesc: document.getElementById("scannerStatusDesc"),
+  backendStatusBullet: document.getElementById("backendStatusBullet"),
+  backendStatusBadge: document.getElementById("backendStatusBadge"),
+  backendStatusDesc: document.getElementById("backendStatusDesc"),
+  statusSyncTimestamp: document.getElementById("statusSyncTimestamp"),
+
+  // Live Overview View Controls
+  overviewTotal: document.getElementById("overviewTotal"),
+  overviewCheckedIn: document.getElementById("overviewCheckedIn"),
+  overviewPending: document.getElementById("overviewPending"),
+  overviewArenas: document.getElementById("overviewArenas"),
+  btnRefreshOverview: document.getElementById("btnRefreshOverview"),
+
+  // Full Activity Log View Controls
+  fullLogSearch: document.getElementById("fullLogSearch"),
+  btnExportCsvFull: document.getElementById("btnExportCsvFull"),
+  fullHistoryTableBody: document.getElementById("fullHistoryTableBody")
 };
 
 // ==============================================================================
@@ -731,6 +842,125 @@ function initUI() {
   elements.historySearch.addEventListener("input", (e) => filterHistory(e.target.value));
   elements.btnExportCsv.addEventListener("click", exportHistoryCsv);
   elements.btnClearHistory.addEventListener("click", clearHistory);
+
+  // Operational Navigation Tabs (F1, F2, F3)
+  if (elements.tabGate) elements.tabGate.addEventListener("click", () => switchView("gate"));
+  if (elements.tabArena) elements.tabArena.addEventListener("click", () => switchView("arena"));
+  if (elements.tabSearch) elements.tabSearch.addEventListener("click", () => switchView("search"));
+  if (elements.tabHistory) elements.tabHistory.addEventListener("click", () => switchView("history"));
+  if (elements.tabOverview) elements.tabOverview.addEventListener("click", () => switchView("overview"));
+
+  // Arena Mode Controls
+  if (elements.arenaManualForm) {
+    elements.arenaManualForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const rawVal = elements.arenaManualRegId.value.trim();
+      if (rawVal) {
+        state.currentMode = "arena";
+        handleRegistrationCode(rawVal);
+        elements.arenaManualRegId.value = "";
+      }
+    });
+  }
+
+  if (elements.arenaViewSelect) {
+    elements.arenaViewSelect.addEventListener("change", (e) => {
+      state.activeArena = e.target.value;
+      if (elements.activeArenaSelect) elements.activeArenaSelect.value = e.target.value;
+      updateModeUI();
+    });
+  }
+
+  // Registration Search Controls
+  if (elements.regSearchQuery) {
+    elements.regSearchQuery.addEventListener("input", (e) => {
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        executeRegistrationSearch(e.target.value);
+      }, 250);
+    });
+    elements.regSearchQuery.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        executeRegistrationSearch(e.target.value);
+      }
+    });
+  }
+
+  if (elements.btnExecuteSearch) {
+    elements.btnExecuteSearch.addEventListener("click", () => {
+      if (elements.regSearchQuery) executeRegistrationSearch(elements.regSearchQuery.value);
+    });
+  }
+
+  // System Status Modal Handlers
+  if (elements.connectionStatus) {
+    elements.connectionStatus.addEventListener("click", openSystemStatusModal);
+  }
+  if (elements.btnCloseSystemStatus) {
+    elements.btnCloseSystemStatus.addEventListener("click", closeSystemStatusModal);
+  }
+  if (elements.btnCloseSystemStatusFooter) {
+    elements.btnCloseSystemStatusFooter.addEventListener("click", closeSystemStatusModal);
+  }
+  if (elements.systemStatusModal) {
+    elements.systemStatusModal.addEventListener("click", (e) => {
+      if (e.target === elements.systemStatusModal) closeSystemStatusModal();
+    });
+  }
+  if (elements.btnPingBackend) {
+    elements.btnPingBackend.addEventListener("click", testPingBackend);
+  }
+
+  // Full History Log Controls
+  if (elements.fullLogSearch) {
+    elements.fullLogSearch.addEventListener("input", (e) => renderFullHistory(e.target.value));
+  }
+  if (elements.btnExportCsvFull) {
+    elements.btnExportCsvFull.addEventListener("click", exportHistoryCsv);
+  }
+  if (elements.btnRefreshOverview) {
+    elements.btnRefreshOverview.addEventListener("click", updateOverviewStats);
+  }
+
+  // Global Keyboard Shortcuts (F1, F2, F3, Esc, Space/Enter)
+  window.addEventListener("keydown", (e) => {
+    // If modal is open, Esc closes it
+    if (e.key === "Escape") {
+      closeAllModals();
+      resetToIdle();
+      return;
+    }
+
+    // F1 -> Gate Check-In
+    if (e.key === "F1") {
+      e.preventDefault();
+      switchView("gate");
+      return;
+    }
+
+    // F2 -> Arena Attendance
+    if (e.key === "F2") {
+      e.preventDefault();
+      switchView("arena");
+      return;
+    }
+
+    // F3 -> Registration Search
+    if (e.key === "F3") {
+      e.preventDefault();
+      switchView("search");
+      return;
+    }
+  });
+
+  // Quick test chip clicks
+  document.querySelectorAll(".test-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const targetId = chip.dataset.id;
+      if (targetId) handleRegistrationCode(targetId);
+    });
+  });
 }
 
 function switchEvent(eventId) {
@@ -1072,6 +1302,15 @@ async function handleRegistrationCode(rawId) {
     clearTimeout(state.autoResumeTimeout);
   }
 
+  // Prevent double submission
+  if (elements.btnManualSubmit) {
+    elements.btnManualSubmit.disabled = true;
+    elements.btnManualSubmit.innerHTML = '<div class="ops-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;margin-right:6px;"></div> <span>VERIFYING...</span>';
+  }
+  if (elements.manualRegId) {
+    elements.manualRegId.disabled = true;
+  }
+
   const regId = rawId.trim().toUpperCase();
 
   elements.stateIdle.style.display = "none";
@@ -1252,8 +1491,21 @@ function displayScanResult(result) {
   elements.stateLoading.style.display = "none";
   elements.stateResult.style.display = "flex";
 
+  // Unlock double submission locks
+  if (elements.btnManualSubmit) {
+    elements.btnManualSubmit.disabled = false;
+    elements.btnManualSubmit.innerHTML = '<i class="ph-bold ph-arrow-right"></i> <span>CHECK IN</span>';
+  }
+  if (elements.manualRegId) {
+    elements.manualRegId.disabled = false;
+  }
+
   const nowTime = new Date().toLocaleTimeString();
   elements.bannerTimestamp.textContent = nowTime;
+
+  // Real sync timestamp
+  if (elements.lastSyncTimeText) elements.lastSyncTimeText.textContent = nowTime;
+  if (elements.statusSyncTimestamp) elements.statusSyncTimestamp.textContent = nowTime;
 
   const p = result.participant || {
     regId: result.regId,
@@ -1288,27 +1540,26 @@ function displayScanResult(result) {
   elements.displayName.textContent = name;
   elements.displayRoll.textContent = rollNo;
   elements.displayYearSec.textContent = yearSec;
-  elements.displayPaymentBadge.textContent = paymentStatus;
 
   // Render Arenas with highlight on active arena
   elements.displayArenas.innerHTML = arenasList.map((arena, idx) => {
     const isCurrentActive = state.currentMode === "arena" && arena.toLowerCase().includes(state.activeArena.toLowerCase());
     return `
-      <div class="arena-item" style="${isCurrentActive ? 'border: 1px solid var(--border-brand); background: var(--brand-subtle);' : ''}">
-        <span class="arena-num" style="${isCurrentActive ? 'background: var(--brand-primary); color: #fff;' : ''}">${idx + 1}</span>
-        <span class="arena-name">${escapeHtml(arena)} ${isCurrentActive ? '★ (Active Desk)' : ''}</span>
+      <div class="activity-chip" style="${isCurrentActive ? 'border: 1px solid var(--border-focus); background: rgba(16, 185, 129, 0.1);' : ''}">
+        <span class="chip-num" style="${isCurrentActive ? 'background: var(--status-success); color: #064E3B;' : ''}">${idx + 1}</span>
+        <span class="chip-name" style="${isCurrentActive ? 'font-weight: 700; color: var(--text-pure);' : ''}">${escapeHtml(arena)} ${isCurrentActive ? '★ (Active Desk)' : ''}</span>
       </div>
     `;
   }).join("");
 
-  // Evaluate Status
+  // Evaluate the 5 Unambiguous Operational Result States
   if (result.success && result.status === "SUCCESS") {
-    // 🟢 SUCCESS
-    elements.resultBanner.className = "result-banner banner-success";
-    elements.bannerIcon.textContent = "✓";
+    // 🟢 1. SUCCESS (ENTRY APPROVED / ATTENDANCE MARKED)
+    elements.resultBanner.className = "ops-result-banner banner-success";
+    elements.bannerIcon.innerHTML = '<i class="ph-bold ph-check"></i>';
     
     if (state.currentMode === "gate") {
-      elements.bannerTitle.textContent = "MAIN ENTRY VERIFIED";
+      elements.bannerTitle.textContent = "ENTRY APPROVED";
       elements.bannerSubtitle.textContent = "Registration confirmed & marked CHECKED IN";
       elements.displayCheckinStatus.textContent = "CHECKED IN";
     } else {
@@ -1317,14 +1568,22 @@ function displayScanResult(result) {
       elements.displayCheckinStatus.textContent = `PRESENT (${state.activeArena})`;
     }
     
-    elements.displayCheckinStatus.style.color = "var(--emerald-main)";
+    elements.displayCheckinStatus.style.color = "var(--status-success-text)";
     elements.displayCheckinTime.textContent = result.checkedInAt || formatCurrentTimestamp();
+    elements.displayPaymentBadge.textContent = "PAYMENT VERIFIED";
+    elements.displayPaymentBadge.style.background = "var(--status-success-bg)";
+    elements.displayPaymentBadge.style.color = "var(--status-success-text)";
+    elements.displayPaymentBadge.style.borderColor = "var(--status-success-border)";
+
+    if (elements.btnNextScan) {
+      elements.btnNextScan.innerHTML = '<i class="ph-bold ph-qr-code"></i> <span>SCAN NEXT PARTICIPANT</span> <span class="kbd-pill">Enter / Space</span>';
+    }
 
     SoundFX.playSuccess();
     triggerConfetti();
     addHistoryRecord({
       time: nowTime,
-      scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
+      scannedBy: state.currentUser ? state.currentUser.name : "Sai Nikhil",
       mode: state.currentMode === "gate" ? "Gate Entry" : state.activeArena,
       regId: regId,
       name: name,
@@ -1336,20 +1595,27 @@ function displayScanResult(result) {
     });
 
   } else if (result.status === "ALREADY_CHECKED_IN" || result.status === "ALREADY_PRESENT") {
-    // 🟡 WARNING: Duplicate
-    elements.resultBanner.className = "result-banner banner-warning";
-    elements.bannerIcon.textContent = "⚠️";
+    // 🟡 2. ALREADY CHECKED IN / ALREADY PRESENT
+    elements.resultBanner.className = "ops-result-banner banner-warning";
+    elements.bannerIcon.innerHTML = '<i class="ph-bold ph-warning"></i>';
     elements.bannerTitle.textContent = result.status === "ALREADY_PRESENT" ? "ALREADY MARKED PRESENT" : "ALREADY CHECKED IN";
-    elements.bannerSubtitle.textContent = result.message || `Scanned earlier at ${result.checkedInAt || "Earlier"}`;
+    elements.bannerSubtitle.textContent = result.status === "ALREADY_PRESENT" 
+      ? `Previously recorded present for ${state.activeArena}`
+      : `Previously checked in at ${result.checkedInAt || "Earlier"}`;
     
     elements.displayCheckinStatus.textContent = `DUPLICATE (${result.checkedInAt || "Earlier"})`;
-    elements.displayCheckinStatus.style.color = "var(--amber-main)";
+    elements.displayCheckinStatus.style.color = "var(--status-warning-text)";
     elements.displayCheckinTime.textContent = result.checkedInAt || "Earlier";
+    elements.displayPaymentBadge.textContent = paymentStatus;
+
+    if (elements.btnNextScan) {
+      elements.btnNextScan.innerHTML = '<i class="ph-bold ph-qr-code"></i> <span>SCAN NEXT PARTICIPANT</span> <span class="kbd-pill">Enter / Space</span>';
+    }
 
     SoundFX.playWarning();
     addHistoryRecord({
       time: nowTime,
-      scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
+      scannedBy: state.currentUser ? state.currentUser.name : "Sai Nikhil",
       mode: state.currentMode === "gate" ? "Gate Entry" : state.activeArena,
       regId: regId,
       name: name,
@@ -1360,28 +1626,110 @@ function displayScanResult(result) {
       statusClass: "tag-warning"
     });
 
-  } else {
-    // 🔴 ERROR
-    elements.resultBanner.className = "result-banner banner-error";
-    elements.bannerIcon.textContent = "✕";
-    elements.bannerTitle.textContent = result.status === "ACTIVITY_NOT_SELECTED" ? "ROUND NOT REGISTERED" : (result.status === "NOT_CHECKED_IN_GATE" ? "GATE ENTRY REQUIRED" : "ENTRY REJECTED");
-    elements.bannerSubtitle.textContent = result.message || "Participant verification failed.";
+  } else if (result.status === "PAYMENT_UNVERIFIED") {
+    // 🔴 3. PAYMENT NOT VERIFIED
+    elements.resultBanner.className = "ops-result-banner banner-error";
+    elements.bannerIcon.innerHTML = '<i class="ph-bold ph-x"></i>';
+    elements.bannerTitle.textContent = "ENTRY DENIED";
+    elements.bannerSubtitle.textContent = "PAYMENT NOT VERIFIED — Please direct participant to the registration/help desk.";
     
-    elements.displayCheckinStatus.textContent = "DENIED";
-    elements.displayCheckinStatus.style.color = "var(--rose-main)";
+    elements.displayCheckinStatus.textContent = "DENIED (UNPAID)";
+    elements.displayCheckinStatus.style.color = "var(--status-error-text)";
     elements.displayCheckinTime.textContent = "—";
+    elements.displayPaymentBadge.textContent = "PAYMENT UNVERIFIED";
+    elements.displayPaymentBadge.style.background = "var(--status-error-bg)";
+    elements.displayPaymentBadge.style.color = "var(--status-error-text)";
+    elements.displayPaymentBadge.style.borderColor = "var(--status-error-border)";
+
+    if (elements.btnNextScan) {
+      elements.btnNextScan.innerHTML = '<i class="ph-bold ph-qr-code"></i> <span>SCAN NEXT PARTICIPANT</span> <span class="kbd-pill">Enter / Space</span>';
+    }
 
     SoundFX.playError();
     addHistoryRecord({
       time: nowTime,
-      scannedBy: state.currentUser ? state.currentUser.name : "Vishnu",
+      scannedBy: state.currentUser ? state.currentUser.name : "Sai Nikhil",
+      mode: state.currentMode === "gate" ? "Gate Entry" : state.activeArena,
+      regId: regId,
+      name: name,
+      rollNo: rollNo,
+      section: p.section,
+      arenas: arenasList.join(", "),
+      status: "PAYMENT UNVERIFIED",
+      statusClass: "tag-error"
+    });
+
+  } else if (result.status === "NOT_FOUND") {
+    // 🔴 4. REGISTRATION NOT FOUND
+    elements.resultBanner.className = "ops-result-banner banner-error";
+    elements.bannerIcon.innerHTML = '<i class="ph-bold ph-x"></i>';
+    elements.bannerTitle.textContent = "REGISTRATION NOT FOUND";
+    elements.bannerSubtitle.textContent = "Please check the ticket or Registration ID.";
+    
+    elements.displayCheckinStatus.textContent = "NOT FOUND";
+    elements.displayCheckinStatus.style.color = "var(--status-error-text)";
+    elements.displayCheckinTime.textContent = "—";
+    elements.displayPaymentBadge.textContent = "NOT IN RECORDS";
+    elements.displayPaymentBadge.style.background = "var(--status-error-bg)";
+    elements.displayPaymentBadge.style.color = "var(--status-error-text)";
+    elements.displayPaymentBadge.style.borderColor = "var(--status-error-border)";
+
+    if (elements.btnNextScan) {
+      elements.btnNextScan.innerHTML = '<i class="ph-bold ph-arrows-clockwise"></i> <span>TRY AGAIN</span> <span class="kbd-pill">Enter</span>';
+    }
+
+    SoundFX.playError();
+    addHistoryRecord({
+      time: nowTime,
+      scannedBy: state.currentUser ? state.currentUser.name : "Sai Nikhil",
+      mode: state.currentMode === "gate" ? "Gate Entry" : state.activeArena,
+      regId: regId,
+      name: "Unknown",
+      rollNo: "—",
+      section: "—",
+      arenas: "—",
+      status: "NOT FOUND",
+      statusClass: "tag-error"
+    });
+
+  } else {
+    // 🔴 5. SYSTEM ERROR / RESTRICTION (NETWORK TIMEOUT / GATE REQUIRED FIRST / ACTIVITY NOT SELECTED)
+    elements.resultBanner.className = "ops-result-banner banner-error";
+    elements.bannerIcon.innerHTML = '<i class="ph-bold ph-warning-octagon"></i>';
+    
+    if (result.status === "ACTIVITY_NOT_SELECTED") {
+      elements.bannerTitle.textContent = "ROUND NOT REGISTERED";
+      elements.bannerSubtitle.textContent = `Participant did NOT register for ${state.activeArena}.`;
+      elements.displayCheckinStatus.textContent = "WRONG ROUND";
+    } else if (result.status === "NOT_CHECKED_IN_GATE") {
+      elements.bannerTitle.textContent = "GATE ENTRY REQUIRED";
+      elements.bannerSubtitle.textContent = "Participant must CHECK IN at the main event entry gate first!";
+      elements.displayCheckinStatus.textContent = "NO GATE ENTRY";
+    } else {
+      elements.bannerTitle.textContent = "UNABLE TO VERIFY";
+      elements.bannerSubtitle.textContent = result.message || "The verification service did not respond.";
+      elements.displayCheckinStatus.textContent = "SYSTEM ERROR";
+    }
+
+    elements.displayCheckinStatus.style.color = "var(--status-error-text)";
+    elements.displayCheckinTime.textContent = "—";
+    elements.displayPaymentBadge.textContent = paymentStatus;
+
+    if (elements.btnNextScan) {
+      elements.btnNextScan.innerHTML = '<i class="ph-bold ph-arrows-clockwise"></i> <span>RETRY</span> <span class="kbd-pill">Enter</span>';
+    }
+
+    SoundFX.playError();
+    addHistoryRecord({
+      time: nowTime,
+      scannedBy: state.currentUser ? state.currentUser.name : "Sai Nikhil",
       mode: state.currentMode === "gate" ? "Gate Entry" : state.activeArena,
       regId: regId,
       name: name || "Unknown",
       rollNo: rollNo || "—",
       section: p.section || "—",
       arenas: arenasList.join(", ") || "—",
-      status: result.status === "ACTIVITY_NOT_SELECTED" ? "WRONG ROUND" : (result.status === "NOT_CHECKED_IN_GATE" ? "NOT AT GATE" : "REJECTED"),
+      status: result.status === "ACTIVITY_NOT_SELECTED" ? "WRONG ROUND" : (result.status === "NOT_CHECKED_IN_GATE" ? "GATE REQUIRED" : "REJECTED"),
       statusClass: "tag-error"
     });
   }
@@ -1405,9 +1753,396 @@ function resetToIdle() {
   state.isProcessingScan = false;
   lastScannedCode = null;
   lastScannedTimestamp = 0;
+
+  if (elements.btnManualSubmit) {
+    elements.btnManualSubmit.disabled = false;
+    elements.btnManualSubmit.innerHTML = '<i class="ph-bold ph-arrow-right"></i> <span>CHECK IN</span>';
+  }
   if (elements.manualRegId) {
+    elements.manualRegId.disabled = false;
     elements.manualRegId.focus();
   }
+}
+
+// ==============================================================================
+// Operational Navigation Views (Gate, Arena, Search, History, Overview)
+// ==============================================================================
+function switchView(viewName) {
+  const views = {
+    gate: elements.viewGateCheckIn,
+    arena: elements.viewArenaAttendance,
+    search: elements.viewRegistrationSearch,
+    history: elements.viewRecentActivity,
+    overview: elements.viewLiveOverview
+  };
+
+  const tabs = {
+    gate: elements.tabGate,
+    arena: elements.tabArena,
+    search: elements.tabSearch,
+    history: elements.tabHistory,
+    overview: elements.tabOverview
+  };
+
+  Object.keys(views).forEach(key => {
+    if (views[key]) {
+      views[key].style.display = (key === viewName) ? "flex" : "none";
+    }
+    if (tabs[key]) {
+      tabs[key].classList.toggle("active", key === viewName);
+    }
+  });
+
+  if (viewName === "gate") {
+    switchMode("gate");
+    if (elements.manualRegId) elements.manualRegId.focus();
+  } else if (viewName === "arena") {
+    switchMode("arena");
+    if (elements.arenaManualRegId) elements.arenaManualRegId.focus();
+  } else if (viewName === "search") {
+    if (elements.regSearchQuery) elements.regSearchQuery.focus();
+  } else if (viewName === "history") {
+    renderFullHistory();
+  } else if (viewName === "overview") {
+    updateOverviewStats();
+  }
+}
+
+// ==============================================================================
+// Registration Search Service & Profile Presentation
+// ==============================================================================
+let searchDebounceTimer = null;
+
+async function executeRegistrationSearch(query) {
+  const q = (query || "").trim().toLowerCase();
+  if (!elements.searchResultsList) return;
+
+  if (!q) {
+    elements.searchResultsList.innerHTML = `
+      <div class="empty-search-hint">
+        <i class="ph ph-magnifying-glass" style="font-size: 2rem; color: var(--text-dim); margin-bottom: 8px;"></i>
+        <p>Type a Registration ID, student name, or roll number to search the event records.</p>
+      </div>
+    `;
+    if (elements.searchResultCount) elements.searchResultCount.textContent = "0 found";
+    return;
+  }
+
+  elements.searchResultsList.innerHTML = `
+    <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+      <div class="ops-spinner" style="margin: 0 auto 8px auto; width: 28px; height: 28px;"></div>
+      Searching database...
+    </div>
+  `;
+
+  try {
+    let results = [];
+    if (state.apiUrl && state.apiUrl.startsWith("http")) {
+      const res = await fetch(`${state.apiUrl}?action=search&query=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.results)) {
+        results = data.results;
+      }
+    } else {
+      // Demo database fallback
+      const records = Object.values(state.demoDatabase);
+      results = records.filter(r => {
+        const id = (r.registrationId || r.regId || "").toLowerCase();
+        const name = (r.name || "").toLowerCase();
+        const roll = (r.roll || r.rollNo || "").toLowerCase();
+        return id.includes(q) || name.includes(q) || roll.includes(q);
+      });
+    }
+
+    if (elements.searchResultCount) elements.searchResultCount.textContent = `${results.length} found`;
+
+    if (!results.length) {
+      elements.searchResultsList.innerHTML = `
+        <div class="empty-search-hint">
+          <i class="ph ph-warning-circle" style="font-size: 2rem; color: var(--status-warning); margin-bottom: 8px;"></i>
+          <p>No participants found matching "<strong>${escapeHtml(q)}</strong>".</p>
+        </div>
+      `;
+      return;
+    }
+
+    elements.searchResultsList.innerHTML = results.map((item, idx) => {
+      const regId = item.registrationId || item.regId || "TS26-XXXX";
+      const name = item.name || "Participant";
+      const roll = item.roll || item.rollNo || "—";
+      const entry = item.entryStatus || "NOT CHECKED IN";
+      const isChecked = entry === "CHECKED IN";
+
+      return `
+        <div class="search-result-card ${idx === 0 ? 'active' : ''}" data-regid="${escapeHtml(regId)}">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+            <strong style="color: var(--text-pure); font-size: 0.95rem;">${escapeHtml(name)}</strong>
+            <span class="font-mono font-bold" style="color: var(--status-info); font-size: 0.85rem;">${escapeHtml(regId)}</span>
+          </div>
+          <div style="display: flex; gap: 8px; font-size: 0.76rem; color: var(--text-muted); flex-wrap: wrap;">
+            <span>Roll: <strong class="font-mono" style="color: var(--text-secondary);">${escapeHtml(roll)}</strong></span>
+            <span>•</span>
+            <span style="color: ${isChecked ? 'var(--status-success-text)' : 'var(--status-warning-text)'}; font-weight: 700;">
+              ${isChecked ? '✓ Checked In' : '○ Pending Gate'}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    elements.searchResultsList.querySelectorAll(".search-result-card").forEach((card, idx) => {
+      card.addEventListener("click", () => {
+        elements.searchResultsList.querySelectorAll(".search-result-card").forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+        renderSearchProfile(results[idx]);
+      });
+    });
+
+    if (results[0]) {
+      renderSearchProfile(results[0]);
+    }
+
+  } catch (err) {
+    console.error("Search error:", err);
+    elements.searchResultsList.innerHTML = `
+      <div class="empty-search-hint" style="color: var(--status-error-text);">
+        <i class="ph ph-warning-octagon" style="font-size: 2rem; margin-bottom: 8px;"></i>
+        <p>Search query failed. Check connection.</p>
+      </div>
+    `;
+  }
+}
+
+function renderSearchProfile(participant) {
+  if (!elements.searchProfileCard || !participant) return;
+
+  const regId = participant.registrationId || participant.regId || "TS26-XXXX";
+  const name = participant.name || "Participant";
+  const roll = participant.roll || participant.rollNo || "—";
+  const year = participant.year || "3rd Year";
+  const sec = participant.section || "Alpha";
+  const email = participant.email || "—";
+  const phone = participant.phone || "—";
+  const payment = participant.paymentStatus || "VERIFIED";
+  const entry = participant.entryStatus || "NOT CHECKED IN";
+  const entryTime = participant.entryTime || "—";
+  const isChecked = entry === "CHECKED IN";
+
+  let arenasList = [];
+  if (Array.isArray(participant.arenas) && participant.arenas.length) {
+    arenasList = participant.arenas;
+  } else if (participant.activities) {
+    arenasList = String(participant.activities).split(",").map(s => s.trim()).filter(Boolean);
+  } else {
+    arenasList = [participant.arena1, participant.arena2, participant.arena3].filter(Boolean);
+  }
+
+  const allArenas = ["CEO for 10 Minutes", "Tech Parody", "Open Mic", "Meme War"];
+
+  if (elements.searchProfileStatus) {
+    elements.searchProfileStatus.textContent = isChecked ? "CHECKED IN" : "PENDING GATE";
+    elements.searchProfileStatus.className = `badge-count ${isChecked ? 'tag-success' : 'tag-warning'}`;
+  }
+
+  elements.searchProfileCard.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      
+      <!-- Top Strip -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+        <div>
+          <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">REGISTRATION ID</span>
+          <div class="font-mono font-bold" style="font-size: 1.3rem; color: var(--text-pure);">${escapeHtml(regId)}</div>
+        </div>
+        <div class="payment-badge-pill" style="background: ${payment === 'VERIFIED' ? 'var(--status-success-bg)' : 'var(--status-error-bg)'}; color: ${payment === 'VERIFIED' ? 'var(--status-success-text)' : 'var(--status-error-text)'}; border-color: ${payment === 'VERIFIED' ? 'var(--status-success-border)' : 'var(--status-error-border)'};">
+          ${escapeHtml(payment)}
+        </div>
+      </div>
+
+      <!-- Personal Info Grid -->
+      <div class="profile-data-grid">
+        <div class="profile-field-full">
+          <span class="field-label">PARTICIPANT NAME</span>
+          <div class="field-val-name font-bold">${escapeHtml(name)}</div>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">ROLL NUMBER</span>
+          <div class="field-val font-mono">${escapeHtml(roll)}</div>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">YEAR & SECTION</span>
+          <div class="field-val">${escapeHtml(year)} • ${escapeHtml(sec)}</div>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">EMAIL ADDRESS</span>
+          <div class="field-val" style="font-size: 0.8rem; word-break: break-all;">${escapeHtml(email)}</div>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">PHONE</span>
+          <div class="field-val font-mono">${escapeHtml(phone)}</div>
+        </div>
+      </div>
+
+      <!-- Gate Status -->
+      <div style="background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 10px 14px; border-radius: var(--radius-xs); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">MAIN GATE ENTRY</span>
+          <div style="font-weight: 800; font-size: 0.95rem; color: ${isChecked ? 'var(--status-success-text)' : 'var(--status-warning-text)'};">
+            ${isChecked ? '✓ CHECKED IN' : '○ NOT CHECKED IN'}
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">ENTRY TIMESTAMP</span>
+          <div class="font-mono" style="font-size: 0.85rem; color: var(--text-secondary);">${escapeHtml(entryTime)}</div>
+        </div>
+      </div>
+
+      <!-- 4 Arenas Eligibility Matrix -->
+      <div>
+        <span class="field-label">ARENAS ATTENDANCE (3 OF 4 MANDATORY • ₹119)</span>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+          ${allArenas.map((arena, i) => {
+            const isRegistered = arenasList.some(a => a.toLowerCase().includes(arena.toLowerCase()));
+            const isPresent = participant.arenaAttendance && participant.arenaAttendance[arena] === "PRESENT";
+            let statusBadge = "";
+            if (!isRegistered) {
+              statusBadge = `<span style="font-size: 0.7rem; color: var(--text-dim); background: var(--bg-panel-elevated); padding: 2px 6px; border-radius: 4px;">NOT SELECTED</span>`;
+            } else if (isPresent) {
+              statusBadge = `<span style="font-size: 0.7rem; color: var(--status-success-text); background: var(--status-success-bg); border: 1px solid var(--status-success-border); padding: 2px 6px; border-radius: 4px; font-weight: 700;">✓ PRESENT</span>`;
+            } else {
+              statusBadge = `<span style="font-size: 0.7rem; color: var(--status-info); background: var(--status-info-bg); border: 1px solid var(--status-info-border); padding: 2px 6px; border-radius: 4px; font-weight: 700;">○ REGISTERED</span>`;
+            }
+
+            return `
+              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 6px 10px; border-radius: var(--radius-xs);">
+                <span style="font-size: 0.82rem; color: ${isRegistered ? 'var(--text-pure)' : 'var(--text-dim)'};">${i + 1}. ${escapeHtml(arena)}</span>
+                ${statusBadge}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+
+      <!-- Quick Action -->
+      ${!isChecked ? `
+        <button class="btn-action-primary" style="margin-top: 6px;" onclick="handleRegistrationCode('${escapeHtml(regId)}'); switchView('gate');">
+          <i class="ph-bold ph-door-open"></i> Check In at Gate Now
+        </button>
+      ` : ''}
+
+    </div>
+  `;
+}
+
+// ==============================================================================
+// System Status & Health Controls
+// ==============================================================================
+function openSystemStatusModal() {
+  if (!elements.systemStatusModal) return;
+
+  const isCamOk = state.html5QrCode && (state.isScanning || state.availableCameras.length > 0);
+  if (elements.scannerStatusBullet) elements.scannerStatusBullet.style.background = isCamOk ? "var(--status-success)" : "var(--status-warning)";
+  if (elements.scannerStatusBadge) elements.scannerStatusBadge.textContent = isCamOk ? "READY" : "PAUSED";
+  if (elements.scannerStatusDesc) elements.scannerStatusDesc.textContent = isCamOk ? "Camera active and capturing frames" : "Camera stream paused or unavailable";
+
+  const isApiOk = state.apiUrl && state.apiUrl.startsWith("http");
+  if (elements.backendStatusBullet) elements.backendStatusBullet.style.background = isApiOk ? "var(--status-success)" : "var(--status-warning)";
+  if (elements.backendStatusBadge) elements.backendStatusBadge.textContent = isApiOk ? "CONNECTED" : "DEMO MODE";
+  if (elements.backendStatusDesc) elements.backendStatusDesc.textContent = isApiOk ? state.apiUrl : "Offline / Built-in demo database";
+
+  if (elements.statusSyncTimestamp) elements.statusSyncTimestamp.textContent = new Date().toLocaleTimeString();
+
+  elements.systemStatusModal.style.display = "flex";
+}
+
+function closeSystemStatusModal() {
+  if (elements.systemStatusModal) elements.systemStatusModal.style.display = "none";
+}
+
+function closeAllModals() {
+  if (elements.systemStatusModal) elements.systemStatusModal.style.display = "none";
+  if (elements.coordinatorLoginModal) elements.coordinatorLoginModal.style.display = "none";
+  if (elements.shareVolunteerModal) elements.shareVolunteerModal.style.display = "none";
+  if (elements.settingsModal) elements.settingsModal.style.display = "none";
+}
+
+async function testPingBackend() {
+  if (!state.apiUrl || !state.apiUrl.startsWith("http")) {
+    alert("Running in Demo Mode (no Google Sheet URL configured).");
+    return;
+  }
+  if (elements.btnPingBackend) elements.btnPingBackend.textContent = "Pinging...";
+  try {
+    const res = await fetch(`${state.apiUrl}?action=ping`);
+    const data = await res.json();
+    if (data && data.success) {
+      alert("✅ Google Sheets backend is online and responsive!\nTimestamp: " + data.timestamp);
+      if (elements.statusSyncTimestamp) elements.statusSyncTimestamp.textContent = new Date().toLocaleTimeString();
+    } else {
+      alert("⚠️ Unexpected backend response:\n" + JSON.stringify(data));
+    }
+  } catch (err) {
+    alert("❌ Could not connect to Google Sheets backend:\n" + err.message);
+  } finally {
+    if (elements.btnPingBackend) elements.btnPingBackend.textContent = "Test Ping";
+  }
+}
+
+// ==============================================================================
+// Live Overview View Updating
+// ==============================================================================
+function updateOverviewStats() {
+  updateStats();
+  const tot = elements.statTotal ? elements.statTotal.textContent : "0";
+  const chk = elements.statCheckedIn ? elements.statCheckedIn.textContent : "0";
+  const pnd = elements.statPending ? elements.statPending.textContent : "0";
+
+  if (elements.overviewTotal) elements.overviewTotal.textContent = tot;
+  if (elements.overviewCheckedIn) elements.overviewCheckedIn.textContent = chk;
+  if (elements.overviewPending) elements.overviewPending.textContent = pnd;
+}
+
+// ==============================================================================
+// Full History Log Rendering
+// ==============================================================================
+function renderFullHistory(filterText = "") {
+  if (!elements.fullHistoryTableBody) return;
+  const q = filterText.toLowerCase().trim();
+  const filtered = state.history.filter(item => {
+    if (!q) return true;
+    return (
+      (item.name && item.name.toLowerCase().includes(q)) ||
+      (item.regId && item.regId.toLowerCase().includes(q)) ||
+      (item.rollNo && item.rollNo.toLowerCase().includes(q)) ||
+      (item.mode && item.mode.toLowerCase().includes(q))
+    );
+  });
+
+  if (!filtered.length) {
+    elements.fullHistoryTableBody.innerHTML = `
+      <tr class="empty-feed-row">
+        <td colspan="9">${q ? 'No records match search filter.' : 'No scans recorded yet on this terminal.'}</td>
+      </tr>
+    `;
+    return;
+  }
+
+  elements.fullHistoryTableBody.innerHTML = filtered.map(item => {
+    const rawMode = (item.mode || "Gate Entry").trim();
+    const isGate = rawMode === "gate" || rawMode === "Gate Entry";
+    return `
+      <tr>
+        <td class="font-mono">${escapeHtml(item.time || '—')}</td>
+        <td class="font-bold" style="color: var(--status-success-text);">${escapeHtml(item.scannedBy || 'Sai Nikhil')}</td>
+        <td><span class="mode-badge ${isGate ? 'mode-gate' : 'mode-arena'}">${escapeHtml(rawMode)}</span></td>
+        <td class="font-mono font-bold">${escapeHtml(item.regId || '—')}</td>
+        <td><strong>${escapeHtml(item.name || 'Participant')}</strong></td>
+        <td class="font-mono">${escapeHtml(item.rollNo || '—')}</td>
+        <td>${escapeHtml(item.section || '—')}</td>
+        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.arenas || '—')}</td>
+        <td><span class="status-tag ${item.statusClass || 'tag-success'}">${escapeHtml(item.status || 'CHECKED IN')}</span></td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function triggerConfetti() {

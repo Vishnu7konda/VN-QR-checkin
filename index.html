@@ -3,14 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>VN QR SCAN | Event Check-In System</title>
+  <meta name="theme-color" content="#0B0F17">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>IIC Event Operations | Techno Splurge 2026</title>
   
   <!-- Modern Geometric Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   
   <!-- HTML5 QR Code Engine -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -18,528 +23,766 @@
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   
+  <!-- GSAP Animation Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
+
+  <div class="app-shell">
     
-    <!-- Top Navigation / Header -->
-    <header class="top-header">
-      <div class="brand-block">
-        <div class="brand-badge" id="appBrandBadge">IIC CLUB • 2026</div>
-        <h1 class="brand-title" id="appBrandTitle">IIC CLUB</h1>
-        <p class="brand-subtitle" id="appBrandSubtitle">GATE ENTRY & ARENA ATTENDANCE SCANNER</p>
+    <!-- TOP OPERATIONAL HEADER -->
+    <header class="ops-header">
+      <div class="header-left">
+        <div class="org-badge-strip">
+          <span class="org-name" id="appBrandBadge">IIC EVENT OPERATIONS</span>
+          <span class="event-code-pill">TS26</span>
+        </div>
+        <div class="header-title-row">
+          <h1 class="event-title" id="appBrandTitle">TECHNO SPLURGE 2026</h1>
+          <span class="header-divider">|</span>
+          <span class="org-subtext" id="appBrandSubtitle">IIC CLUB • MALLA REDDY UNIVERSITY</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="station-indicator-pill" id="headerStationBadge" title="Current Assigned Station">
+          <span class="station-dot"></span>
+          <span class="station-label">STATION:</span>
+          <span class="station-name" id="currentStationText">MAIN GATE</span>
+        </div>
       </div>
       
-      <div class="header-actions">
-        <!-- Coordinator Active Badge -->
-        <div id="coordinatorBadge" class="coordinator-badge" title="Active Scanner Coordinator">
-          <div class="coordinator-avatar" id="coordAvatar">V</div>
-          <div class="coordinator-info">
-            <span class="coord-label">Scanner Operator</span>
-            <span class="coord-name" id="coordName">Vishnu</span>
+      <div class="header-right">
+        <!-- Operator Info -->
+        <div id="coordinatorBadge" class="operator-badge" title="Active Scanner Operator">
+          <div class="operator-avatar" id="coordAvatar">N</div>
+          <div class="operator-meta">
+            <span class="operator-role">Operator</span>
+            <span class="operator-name" id="coordName">Sai Nikhil</span>
           </div>
-          <button id="btnSwitchCoord" class="btn-coord-switch" title="Switch Coordinator / Sign Out" type="button">
-            Switch
+          <button id="btnSwitchCoord" class="btn-operator-switch" title="Switch Operator" type="button">
+            <i class="ph ph-arrows-left-right"></i>
           </button>
         </div>
 
-        <button id="btnShareVolunteer" class="btn btn-secondary btn-share-header" type="button" title="Dispatch Scanner Link to Volunteers">
-          <span style="font-size: 1rem;">📱</span>
-          <span>Share with Volunteers</span>
+        <!-- System Online & Sync Status (Clickable for System Health Modal) -->
+        <div id="connectionStatus" class="connection-status status-online" title="Click to view System Status Details" role="button" tabindex="0">
+          <span class="status-dot"></span>
+          <span class="status-label">ONLINE</span>
+        </div>
+
+        <div class="sync-timestamp" id="lastSyncDisplay" title="Last successful sync time">
+          <i class="ph ph-clock"></i>
+          <span id="lastSyncTimeText">19:43:12</span>
+        </div>
+
+        <!-- Quick Header Action Buttons -->
+        <button id="btnShareVolunteer" class="btn-ops-header" type="button" title="Dispatch Scanner Link to Volunteers">
+          <i class="ph ph-share-network"></i>
+          <span>Dispatch</span>
         </button>
 
-        <div id="connectionStatus" class="connection-status status-online" title="Connection Mode">
-          <span class="status-dot"></span>
-          <span class="status-label">Google Sheets Live</span>
-        </div>
-        <button id="btnOpenSettings" class="icon-btn" title="API & Event Settings" aria-label="Settings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
+        <button id="btnOpenSettings" class="btn-ops-icon" title="Event Settings & Sheets Config" aria-label="Settings" type="button">
+          <i class="ph ph-gear-six"></i>
         </button>
       </div>
     </header>
 
-    <!-- Event Switcher Navigation Bar -->
-    <nav class="event-switcher-nav" aria-label="Event Switcher">
-      <div class="event-switcher-label">
-        <span class="event-label-icon">🎯</span>
-        <span class="event-label-text">Select Active Event:</span>
+    <!-- OPERATIONAL NAVIGATION BAR -->
+    <nav class="ops-nav-bar" aria-label="Operational Views">
+      <div class="nav-tabs-primary">
+        <button class="ops-nav-tab active" id="tabGate" data-view="gate" type="button">
+          <i class="ph-bold ph-door-open"></i>
+          <span>Gate Check-In</span>
+          <span class="kbd-badge">F1</span>
+        </button>
+
+        <button class="ops-nav-tab" id="tabArena" data-view="arena" type="button">
+          <i class="ph-bold ph-trophy"></i>
+          <span>Arena Attendance</span>
+          <span class="kbd-badge">F2</span>
+        </button>
+
+        <button class="ops-nav-tab" id="tabSearch" data-view="search" type="button">
+          <i class="ph-bold ph-magnifying-glass"></i>
+          <span>Registration Search</span>
+          <span class="kbd-badge">F3</span>
+        </button>
+
+        <button class="ops-nav-tab" id="tabHistory" data-view="history" type="button">
+          <i class="ph-bold ph-clock-counter-clockwise"></i>
+          <span>Recent Scans</span>
+        </button>
+
+        <button class="ops-nav-tab" id="tabOverview" data-view="overview" type="button">
+          <i class="ph-bold ph-chart-bar"></i>
+          <span>Live Overview</span>
+        </button>
       </div>
-      <div class="event-pills-group" id="eventPillsGroup">
-        <!-- Event Pills dynamically injected or updated -->
-        <button class="event-pill active" data-event="techno_splurge" type="button">
-          <span class="pill-dot"></span>
-          <span class="pill-title">IIC Club</span>
-          <span class="pill-badge">IIC26</span>
-        </button>
-        <button id="btnEventConfigModal" class="event-pill pill-add" type="button" title="Configure Events & Form Sheets">
-          <span>⚙️ Event Sheets</span>
-        </button>
+
+      <!-- Hidden compatibility elements for app.js -->
+      <div style="display: none;">
+        <button id="modeGateBtn" class="active" data-mode="gate" type="button">Gate</button>
+        <button id="modeArenaBtn" data-mode="arena" type="button">Arena</button>
+        <div class="event-pills-group" id="eventPillsGroup"></div>
+        <button id="btnEventConfigModal" type="button">Config</button>
+      </div>
+
+      <!-- Station Context Indicator & Quick Switcher -->
+      <div class="nav-station-bar" id="arenaDropdownWrap" style="display: none;">
+        <label for="activeArenaSelect" class="station-select-label">
+          <i class="ph-bold ph-crosshair"></i> Assigned Desk:
+        </label>
+        <select id="activeArenaSelect" class="form-select-station">
+          <option value="CEO for 10 Minutes">🎯 CEO for 10 Minutes</option>
+          <option value="Tech Parody">🎯 Tech Parody</option>
+          <option value="Open Mic">🎯 Open Mic</option>
+          <option value="Meme War" selected>🎯 Meme War</option>
+        </select>
       </div>
     </nav>
 
-    <!-- Scan Mode Selector Bar (Main Gate Entry vs Arena Attendance) -->
-    <section class="mode-selector-bar">
-      <div class="mode-toggle-group">
-        <button id="modeGateBtn" class="mode-btn active" data-mode="gate" type="button">
-          <span class="mode-icon">🚪</span>
-          <div class="mode-text">
-            <strong>Main Event Gate Entry</strong>
-            <small>Verify Entry & Mark Checked In</small>
-          </div>
-        </button>
-        <button id="modeArenaBtn" class="mode-btn" data-mode="arena" type="button">
-          <span class="mode-icon">🎯</span>
-          <div class="mode-text">
-            <strong>Arena Attendance</strong>
-            <small>Verify Selection & Mark Present</small>
-          </div>
-        </button>
+    <!-- LIVE METRIC SUMMARY STRIP -->
+    <section class="metrics-summary-strip">
+      <div class="metric-block">
+        <span class="metric-label"><i class="ph ph-users"></i> Registered</span>
+        <span class="metric-value font-mono" id="statTotal">0</span>
       </div>
-
-      <!-- Activity Selector Dropdown -->
-      <div id="arenaDropdownWrap" class="arena-dropdown-wrap" style="display: none;">
-        <label for="activeArenaSelect">Active Arena Desk:</label>
-        <select id="activeArenaSelect" class="form-select font-bold">
-          <option value="CEO for 10 Minutes">1. CEO for 10 Minutes</option>
-          <option value="Tech Parody">2. Tech Parody</option>
-          <option value="Open Mic">3. Open Mic</option>
-          <option value="Meme War">4. Meme War</option>
-        </select>
+      <div class="metric-block metric-highlight-green">
+        <span class="metric-label" id="statCheckedLabel"><i class="ph ph-check-circle"></i> Checked In</span>
+        <span class="metric-value font-mono" id="statCheckedIn">0</span>
+      </div>
+      <div class="metric-block metric-highlight-amber">
+        <span class="metric-label"><i class="ph ph-hourglass"></i> Pending Gate</span>
+        <span class="metric-value font-mono" id="statPending">0</span>
+      </div>
+      <div class="metric-block metric-station-stat" id="arenaAttendanceBlock" style="display: none;">
+        <span class="metric-label"><i class="ph ph-check-square-offset"></i> Round Attendees</span>
+        <span class="metric-value font-mono" id="statArenaAttendees">0</span>
       </div>
     </section>
 
-    <!-- Quick Stats Bar -->
-    <section class="stats-bar">
-      <div class="stat-card">
-        <span class="stat-label">Total Registered</span>
-        <span id="statTotal" class="stat-value">0</span>
-      </div>
-      <div class="stat-card stat-checked">
-        <span class="stat-label" id="statCheckedLabel">Gate Checked In</span>
-        <span id="statCheckedIn" class="stat-value">0</span>
-      </div>
-      <div class="stat-card stat-pending">
-        <span class="stat-label">Pending</span>
-        <span id="statPending" class="stat-value">0</span>
-      </div>
-    </section>
-
-    <!-- Main Workspace Grid -->
-    <main class="main-grid">
+    <!-- VIEWPORT CONTENT CONTAINER -->
+    <main class="ops-main-content">
       
-      <!-- Scanner Column -->
-      <div class="scanner-column">
-        <div class="card scanner-card">
-          <div class="card-header">
-            <div class="card-title-group">
-              <h2 class="card-title" id="scannerTitle">Main Gate Scanner</h2>
-              <p class="card-hint" id="scannerHint">Point camera directly at the participant ticket QR code</p>
-            </div>
-            <div class="scanner-controls-top">
-              <button id="btnSwitchCamera" class="btn-sm" title="Switch Front/Back Camera" type="button">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M23 4v6h-6"></path>
-                  <path d="M1 20v-6h6"></path>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-                Flip
-              </button>
-            </div>
-          </div>
-
-          <!-- QR Reader Viewport -->
-          <div class="scanner-viewport-wrapper">
-            <div id="qr-reader"></div>
-            <div id="scannerOverlay" class="scanner-laser-overlay">
-              <div class="scanner-box">
-                <div class="corner-border tl"></div>
-                <div class="corner-border tr"></div>
-                <div class="corner-border bl"></div>
-                <div class="corner-border br"></div>
-                <div class="scan-laser-line"></div>
-              </div>
-            </div>
-            <div id="cameraLoading" class="camera-loading">
-              <div class="spinner"></div>
-              <span>Initializing Camera Stream...</span>
-            </div>
-          </div>
-
-          <!-- Controls & Manual Fallback -->
-          <div class="scanner-footer">
-            <div class="scanner-btn-group">
-              <button id="btnToggleScan" class="btn btn-primary" type="button">
-                <span id="scanBtnIcon">⏸</span>
-                <span id="scanBtnText">Pause Scanner</span>
-              </button>
-              <label for="qrFileInput" class="btn btn-outline" title="Upload ticket QR image file">
-                📁 Upload QR Image
-                <input type="file" id="qrFileInput" accept="image/*" style="display: none;">
-              </label>
-            </div>
-            
-            <!-- Manual Entry / Barcode Scanner Fallback -->
-            <form id="manualEntryForm" class="manual-entry-form">
-              <div class="input-with-btn">
-                <input 
-                  type="text" 
-                  id="manualRegId" 
-                  placeholder="Or enter Registration ID (e.g. TS26-0001)" 
-                  autocomplete="off" 
-                  spellcheck="false"
-                  required
-                >
-                <button type="submit" class="btn btn-secondary">Check In</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Result & Verification Column -->
-      <div class="result-column">
+      <!-- ========================================================================= -->
+      <!-- VIEW 1: GATE CHECK-IN (DEFAULT PRIMARY SCREEN)                            -->
+      <!-- ========================================================================= -->
+      <section id="viewGateCheckIn" class="ops-view-section active">
         
-        <!-- Live Result Card -->
-        <div id="resultCard" class="card result-card state-idle">
+        <div class="operations-grid">
           
-          <!-- Idle / Ready State -->
-          <div id="stateIdle" class="result-empty">
-            <div class="empty-icon-shield">
-              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <path d="m9 12 2 2 4-4"></path>
-              </svg>
-            </div>
-            <h3>Scanner Ready</h3>
-            <p>Scan a ticket QR code or enter a Registration ID to instantly verify participant details and record attendance.</p>
-            <div class="sample-chip-group">
-              <span class="sample-label">Quick test IDs:</span>
-              <button class="chip-btn" data-id="TS26-0001" type="button">TS26-0001 (Sai Nikhil)</button>
-              <button class="chip-btn" data-id="TS26-0003" type="button">TS26-0003 (Vishnu)</button>
-              <button class="chip-btn" data-id="TS26-9999" type="button">TS26-9999 (Invalid)</button>
+          <!-- SCANNER STATION COLUMN -->
+          <div class="ops-col-scanner">
+            <div class="panel scanner-panel">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <span class="station-tag-indicator" id="scannerBadgeTag">GATE ENTRY</span>
+                  <h2 class="panel-heading" id="scannerTitle">Main Gate Scanner</h2>
+                  <p class="panel-subhint" id="scannerHint">Point camera directly at participant ticket QR code (TS26-...)</p>
+                </div>
+
+                <div class="scanner-header-actions">
+                  <button id="btnSwitchCamera" class="btn-ops-control" title="Switch Front/Back Camera" type="button">
+                    <i class="ph-bold ph-camera-rotate"></i> Flip
+                  </button>
+                  <button id="btnToggleScan" class="btn-ops-control" title="Pause or Resume Scanner" type="button">
+                    <span id="scanBtnIcon"><i class="ph-bold ph-pause"></i></span>
+                    <span id="scanBtnText">Pause</span>
+                  </button>
+                  <label for="qrFileInput" class="btn-ops-control" title="Upload QR Code image">
+                    <i class="ph-bold ph-file-arrow-up"></i> Image
+                    <input type="file" id="qrFileInput" accept="image/*" style="display: none;">
+                  </label>
+                </div>
+              </div>
+
+              <!-- Camera Viewport Box -->
+              <div class="scanner-camera-box">
+                <div id="qr-reader"></div>
+                
+                <!-- Clean Professional Reticle -->
+                <div id="scannerOverlay" class="scanner-viewfinder-overlay">
+                  <div class="viewfinder-frame">
+                    <div class="vf-corner tl"></div>
+                    <div class="vf-corner tr"></div>
+                    <div class="vf-corner bl"></div>
+                    <div class="vf-corner br"></div>
+                    <div class="scan-laser-line"></div>
+                  </div>
+                  <div class="viewfinder-status-badge">
+                    <span class="dot-pulse"></span>
+                    <span>READY TO SCAN</span>
+                  </div>
+                </div>
+
+                <!-- Camera Loading / Fallback Overlay -->
+                <div id="cameraLoading" class="camera-status-overlay">
+                  <div class="spinner"></div>
+                  <span class="status-msg">Accessing Camera Stream...</span>
+                </div>
+              </div>
+
+              <!-- HIGH-VISIBILITY MANUAL REGISTRATION ID INPUT -->
+              <div class="manual-entry-container">
+                <div class="manual-label-row">
+                  <span class="manual-title"><i class="ph-bold ph-keyboard"></i> MANUAL REGISTRATION ID ENTRY</span>
+                  <span class="manual-hint">Press Enter to Check In</span>
+                </div>
+                
+                <form id="manualEntryForm" class="manual-id-form">
+                  <div class="manual-input-wrapper">
+                    <span class="id-input-icon"><i class="ph-bold ph-hash"></i></span>
+                    <input 
+                      type="text" 
+                      id="manualRegId" 
+                      class="manual-id-input font-mono"
+                      placeholder="Enter Registration ID (e.g. TS26-0001)" 
+                      autocomplete="off" 
+                      spellcheck="false"
+                      required
+                    >
+                    <button type="submit" class="btn-action-primary" id="btnManualSubmit">
+                      <i class="ph-bold ph-arrow-right"></i>
+                      <span>CHECK IN</span>
+                    </button>
+                  </div>
+                </form>
+
+                <!-- Quick-Test Preset Chips -->
+                <div class="quick-test-chips">
+                  <span class="chips-label">Quick Test:</span>
+                  <button class="test-chip" data-id="TS26-0001" type="button">TS26-0001 (Sai Nikhil)</button>
+                  <button class="test-chip" data-id="TS26-0003" type="button">TS26-0003 (Vishnu)</button>
+                  <button class="test-chip" data-id="TS26-9999" type="button">TS26-9999 (Invalid)</button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Loading State -->
-          <div id="stateLoading" class="result-loading" style="display: none;">
-            <div class="spinner-large"></div>
-            <h3>Verifying with Google Sheets...</h3>
-            <p id="loadingRegId" class="mono-badge">TS26-0001</p>
+          <!-- VERIFICATION RESULT COLUMN -->
+          <div class="ops-col-result">
+            <div id="resultCard" class="panel result-panel state-idle">
+              
+              <!-- IDLE / READY STATE -->
+              <div id="stateIdle" class="result-state-view result-state-idle">
+                <div class="idle-shield-icon">
+                  <i class="ph-bold ph-shield-check"></i>
+                </div>
+                <h3 class="idle-heading">SCANNER READY</h3>
+                <p class="idle-desc">Scan a participant ticket QR code or enter a Registration ID to verify entry and record attendance.</p>
+                <div class="idle-steps-list">
+                  <div class="idle-step-item">
+                    <span class="step-num">1</span>
+                    <span>Align participant QR code in camera frame</span>
+                  </div>
+                  <div class="idle-step-item">
+                    <span class="step-num">2</span>
+                    <span>System verifies payment & registration instantly</span>
+                  </div>
+                  <div class="idle-step-item">
+                    <span class="step-num">3</span>
+                    <span>Confirm verification result & tap Next Scan</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- LOADING STATE -->
+              <div id="stateLoading" class="result-state-view result-state-loading" style="display: none;">
+                <div class="ops-spinner"></div>
+                <h3 class="loading-heading">VERIFYING WITH GOOGLE SHEETS...</h3>
+                <div id="loadingRegId" class="loading-reg-badge font-mono">TS26-0001</div>
+                <p class="loading-sub">Checking payment status, package, and duplicate check-in...</p>
+              </div>
+
+              <!-- VERIFIED / RESULT STATE (Standardized 5 Result States) -->
+              <div id="stateResult" class="result-state-view result-state-active" style="display: none;">
+                
+                <!-- UNAMBIGUOUS RESULT BANNER -->
+                <div id="resultBanner" class="ops-result-banner banner-success">
+                  <div class="banner-status-icon" id="bannerIcon">
+                    <i class="ph-bold ph-check"></i>
+                  </div>
+                  <div class="banner-text-block">
+                    <div class="banner-header-row">
+                      <h3 class="banner-main-title" id="bannerTitle">ENTRY APPROVED</h3>
+                      <span id="bannerTimestamp" class="banner-time-tag font-mono">19:43:21</span>
+                    </div>
+                    <p class="banner-subtitle-text" id="bannerSubtitle">Registration confirmed & marked CHECKED IN</p>
+                  </div>
+                </div>
+
+                <!-- PARTICIPANT PROFILE & CREDENTIALS CARD -->
+                <div class="participant-ops-card">
+                  
+                  <!-- ID & Package Strip -->
+                  <div class="profile-top-strip">
+                    <div class="profile-reg-block">
+                      <span class="strip-label">REGISTRATION ID</span>
+                      <div class="profile-reg-id font-mono font-bold" id="displayRegId">TS26-0001</div>
+                    </div>
+                    <div class="profile-payment-block">
+                      <span class="strip-label">PAYMENT STATUS</span>
+                      <div class="payment-badge-pill" id="displayPaymentBadge">PAYMENT VERIFIED</div>
+                    </div>
+                  </div>
+
+                  <!-- Primary Personal Info Grid -->
+                  <div class="profile-data-grid">
+                    <div class="profile-field-full">
+                      <span class="field-label">PARTICIPANT NAME</span>
+                      <div class="field-val-name font-bold" id="displayName">Sai Nikhil</div>
+                    </div>
+
+                    <div class="profile-field">
+                      <span class="field-label">ROLL NUMBER</span>
+                      <div class="field-val font-mono" id="displayRoll">2411CS030059</div>
+                    </div>
+
+                    <div class="profile-field">
+                      <span class="field-label">YEAR & SECTION</span>
+                      <div class="field-val" id="displayYearSec">3rd Year • Alpha</div>
+                    </div>
+                  </div>
+
+                  <!-- Package & Registered Activities -->
+                  <div class="profile-activities-block">
+                    <div class="activities-header-row">
+                      <span class="field-label">REGISTERED ACTIVITIES (3 OF 4 MANDATORY • ₹119)</span>
+                    </div>
+                    <div class="activities-tag-list" id="displayArenas">
+                      <div class="activity-chip"><span class="chip-num">1</span> CEO for 10 Minutes</div>
+                      <div class="activity-chip"><span class="chip-num">2</span> Tech Parody</div>
+                      <div class="activity-chip"><span class="chip-num">3</span> Open Mic</div>
+                    </div>
+                  </div>
+
+                  <!-- Verification Timestamp Metadata -->
+                  <div class="profile-meta-strip">
+                    <div class="meta-col">
+                      <span class="meta-tag-label">GATE ENTRY STATUS</span>
+                      <span class="meta-tag-val font-bold" id="displayCheckinStatus">CHECKED IN</span>
+                    </div>
+                    <div class="meta-col">
+                      <span class="meta-tag-label">RECORDED TIMESTAMP</span>
+                      <span class="meta-tag-val font-mono" id="displayCheckinTime">19:43:21</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- OPERATOR ACTION: SCAN NEXT -->
+                <div class="ops-action-footer">
+                  <button id="btnNextScan" class="btn-action-next" type="button">
+                    <i class="ph-bold ph-qr-code"></i>
+                    <span>SCAN NEXT PARTICIPANT</span>
+                    <span class="kbd-pill">Enter / Space</span>
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
           </div>
 
-          <!-- Content / Verified / Warning State -->
-          <div id="stateResult" class="result-content" style="display: none;">
-            
-            <!-- Result Status Banner -->
-            <div id="resultBanner" class="result-banner banner-success">
-              <div class="banner-icon-wrap" id="bannerIcon">✓</div>
-              <div class="banner-text-wrap">
-                <h3 id="bannerTitle">ENTRY VERIFIED</h3>
-                <p id="bannerSubtitle">Registration confirmed & checked in</p>
-              </div>
-              <span id="bannerTimestamp" class="banner-time">18:02:15</span>
+        </div>
+
+        <!-- RECENT SCANS LIVE FEED (DIRECTLY ACCESSIBLE FROM GATE) -->
+        <div class="panel live-feed-panel">
+          <div class="live-feed-header">
+            <div class="live-feed-title">
+              <i class="ph-bold ph-list-bullets"></i>
+              <span>RECENT GATE SCANS</span>
+              <span id="historyCountBadge" class="badge-count">0 scans</span>
             </div>
-
-            <!-- Participant Ticket Details Credential Box -->
-            <div class="ticket-details-box">
-              <div class="ticket-header">
-                <div class="ticket-title-group">
-                  <span class="ticket-event-tag">EVENT PASS • 2026</span>
-                  <div class="ticket-reg-id" id="displayRegId">YC26-0001</div>
-                </div>
-                <div class="payment-badge" id="displayPaymentBadge">₹119 • VERIFIED</div>
-              </div>
-
-              <!-- Participant Personal Info -->
-              <div class="participant-grid">
-                <div class="info-group full-width">
-                  <label>PARTICIPANT NAME</label>
-                  <div class="info-val info-name" id="displayName">Sai Nikhil</div>
-                </div>
-                <div class="info-group">
-                  <label>ROLL NUMBER</label>
-                  <div class="info-val font-mono" id="displayRoll">2411CS030059</div>
-                </div>
-                <div class="info-group">
-                  <label>YEAR & SECTION</label>
-                  <div class="info-val" id="displayYearSec">3rd Year • Alpha</div>
-                </div>
-              </div>
-
-              <!-- Arenas Section -->
-              <div class="arenas-section">
-                <label class="arenas-label">SELECTED ARENAS (3 MANDATORY)</label>
-                <div class="arenas-list" id="displayArenas">
-                  <div class="arena-item">
-                    <span class="arena-num">1</span>
-                    <span class="arena-name">CEO for 10 Minutes</span>
-                  </div>
-                  <div class="arena-item">
-                    <span class="arena-num">2</span>
-                    <span class="arena-name">Tech Parody</span>
-                  </div>
-                  <div class="arena-item">
-                    <span class="arena-num">3</span>
-                    <span class="arena-name">Open Mic</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Gate Check-in Metadata -->
-              <div class="gate-meta-box">
-                <div class="meta-item">
-                  <span class="meta-label">Entry Status</span>
-                  <span class="meta-value font-bold" id="displayCheckinStatus">CHECKED IN</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">Timestamp</span>
-                  <span class="meta-value font-mono" id="displayCheckinTime">2026-09-07 18:02:15</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Controls After Scan -->
-            <div class="result-actions">
-              <button id="btnNextScan" class="btn btn-primary btn-block" type="button">
-                <span>Scan Next Participant</span>
-                <span class="kbd-hint">Space / Enter</span>
+            <div class="live-feed-actions">
+              <input type="text" id="historySearch" placeholder="Filter by ID, name, or roll..." class="live-feed-filter font-mono">
+              <button id="btnExportCsv" class="btn-ops-control" type="button" title="Export CSV file">
+                <i class="ph ph-download-simple"></i> Export CSV
+              </button>
+              <button id="btnClearHistory" class="btn-ops-control" type="button" title="Clear scan log">
+                <i class="ph ph-trash"></i> Clear
               </button>
             </div>
-
           </div>
 
+          <div class="table-container">
+            <table class="ops-table" id="historyTable">
+              <thead>
+                <tr>
+                  <th>TIME</th>
+                  <th>OPERATOR</th>
+                  <th>STATION / DESK</th>
+                  <th>REG ID</th>
+                  <th>NAME</th>
+                  <th>ROLL NO</th>
+                  <th>SECTION</th>
+                  <th>REGISTERED ACTIVITIES</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <tr class="empty-feed-row">
+                  <td colspan="9">No participants scanned yet. Verified check-ins will appear here in real time.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-      </div>
+      </section>
 
-    </main>
-
-    <!-- Recent Scans History Section -->
-    <section class="history-section">
-      <div class="card history-card">
-        <div class="history-header">
-          <div class="history-title-group">
-            <h3 class="card-title">Recent Gate Check-Ins</h3>
-            <span id="historyCountBadge" class="badge">0 check-ins</span>
-          </div>
-          <div class="history-actions">
-            <input type="text" id="historySearch" placeholder="Filter by name, roll no, or ID..." class="history-filter-input">
-            <button id="btnExportCsv" class="btn-sm" type="button">Export CSV</button>
-            <button id="btnClearHistory" class="btn-sm" type="button">Clear Log</button>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table class="history-table" id="historyTable">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Scanned By</th>
-                <th>Mode</th>
-                <th>Registration ID</th>
-                <th>Name</th>
-                <th>Roll No</th>
-                <th>Section</th>
-                <th>Selected Arenas</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="historyTableBody">
-              <tr class="empty-row">
-                <td colspan="9">No participants scanned yet. Scanned entries will appear here in real time.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Multi-Event & Sheets Configuration Modal -->
-    <div id="settingsModal" class="modal-overlay" style="display: none;">
-      <div class="modal-card" style="max-width: 620px;">
-        <div class="modal-header">
-          <div>
-            <h3 style="margin-bottom: 2px;">Multi-Club & Event Sheets Manager</h3>
-            <small style="color: var(--text-muted); font-size: 0.78rem;">Add new events, connect separate Google Sheets, and configure clubs</small>
-          </div>
-          <button id="btnCloseSettings" class="icon-btn" type="button">&times;</button>
-        </div>
-
-        <!-- Modal Tabs -->
-        <nav class="modal-tabs" aria-label="Event Configuration Tabs">
-          <button type="button" class="modal-tab-btn active" data-tab="tabActiveEvent">⚙️ Active Event</button>
-          <button type="button" class="modal-tab-btn" data-tab="tabAddEvent">➕ Add New Event</button>
-          <button type="button" class="modal-tab-btn" data-tab="tabManageEvents">📋 All Events (<span id="tabEventsCount">2</span>)</button>
-          <button type="button" class="modal-tab-btn" data-tab="tabGuide">📖 Sheet Setup</button>
-        </nav>
-
-        <div class="modal-body">
-          <!-- TAB 1: ACTIVE EVENT CONFIG -->
-          <div id="tabActiveEvent" class="tab-pane">
-            <div class="form-group" style="background: var(--bg-card-subtle); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span class="club-badge-tag" id="settingsActiveClubTag">IIC CLUB</span>
-                <span style="font-size: 0.72rem; color: var(--emerald-primary); font-weight: 700;">CURRENTLY ACTIVE</span>
-              </div>
-              <h4 id="settingsActiveEventName" style="font-size: 1.1rem; color: var(--text-pure); margin-bottom: 8px;">Techno Splurge</h4>
-              <label for="apiUrlInput">Google Apps Script Web App URL:</label>
-              <input 
-                type="url" 
-                id="apiUrlInput" 
-                placeholder="https://script.google.com/macros/s/.../exec"
-                class="form-control font-mono"
-              >
-              <small class="form-hint">
-                Responses and check-ins for this event sync with this dedicated Google Sheet.
-              </small>
+      <!-- ========================================================================= -->
+      <!-- VIEW 2: ARENA ATTENDANCE (DEDICATED OPERATIONAL MODE)                     -->
+      <!-- ========================================================================= -->
+      <section id="viewArenaAttendance" class="ops-view-section" style="display: none;">
+        <div class="panel arena-ops-header-panel">
+          <div class="arena-station-banner">
+            <div class="arena-icon-badge">
+              <i class="ph-bold ph-trophy"></i>
             </div>
-
-            <div class="participant-grid" style="gap: 12px; margin-top: 0;">
-              <div class="form-group">
-                <label for="eventPrefixInput">Ticket ID Prefix</label>
-                <input type="text" id="eventPrefixInput" class="form-control font-mono" placeholder="e.g. ST26- or TS26-">
-              </div>
-              <div class="form-group">
-                <label for="eventVolunteerPinInput">Volunteer Access PIN</label>
-                <input type="text" id="eventVolunteerPinInput" class="form-control font-mono" placeholder="e.g. 1111" maxlength="8">
-              </div>
+            <div class="arena-info">
+              <span class="arena-station-tag">ACTIVITY ATTENDANCE STATION</span>
+              <h2 class="arena-station-title" id="arenaViewTitle">Meme War</h2>
+              <p class="arena-station-desc">Verifying participant registration for this arena & recording attendance. Gate check-in required.</p>
             </div>
-
-            <div class="form-group">
-              <label for="eventSubtitleInput">Event Tagline / Subtitle</label>
-              <input type="text" id="eventSubtitleInput" class="form-control" placeholder="e.g. Official Gate Entry & Rounds Scanner">
-            </div>
-
-            <div class="form-group">
-              <label for="eventArenasInput">Sub-Activities / Arenas (comma-separated)</label>
-              <input type="text" id="eventArenasInput" class="form-control" placeholder="e.g. Round 1, Round 2, Finals">
-            </div>
-
-            <div class="form-group checkbox-group">
-              <label class="switch-label">
-                <input type="checkbox" id="audioToggle" checked>
-                <span>Audio alerts & sound effects (Chimes / Buzzers)</span>
-              </label>
-            </div>
-
-            <div class="form-group checkbox-group">
-              <label class="switch-label">
-                <input type="checkbox" id="autoResumeToggle" checked>
-                <span>Auto-resume camera 3.5 seconds after scan</span>
-              </label>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-top: 6px;">
-              <button id="btnTestConnection" class="btn btn-secondary" style="flex: 1;" type="button">Test Connection</button>
-              <button id="btnSaveSettings" class="btn btn-primary" style="flex: 1;" type="button">Save Event Config</button>
-            </div>
-          </div>
-
-          <!-- TAB 2: ADD NEW EVENT -->
-          <div id="tabAddEvent" class="tab-pane" style="display: none;">
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; color: #166534;">
-              💡 <strong>Host Concurrent Events:</strong> Add any new event under IIC or a brand new club with its own independent Google Sheet.
-            </div>
-
-            <div class="form-group">
-              <label for="newClubSelect">Parent Club / Organization</label>
-              <select id="newClubSelect" class="form-select font-bold">
-                <option value="IIC Club">IIC Club</option>
-                <option value="__new__">➕ Add New Club / Organization...</option>
+            <div class="arena-station-controls">
+              <label for="arenaViewSelect" class="arena-select-label">Switch Arena Desk:</label>
+              <select id="arenaViewSelect" class="form-select-station font-bold">
+                <option value="CEO for 10 Minutes">1. CEO for 10 Minutes</option>
+                <option value="Tech Parody">2. Tech Parody</option>
+                <option value="Open Mic">3. Open Mic</option>
+                <option value="Meme War" selected>4. Meme War</option>
               </select>
-              <input type="text" id="newClubCustomInput" class="form-control" placeholder="Enter New Club Name (e.g. ACM Club, IEEE, Robotics Club)" style="display: none; margin-top: 6px;">
             </div>
+          </div>
+        </div>
 
-            <div class="form-group">
-              <label for="newEventNameInput">Event Name *</label>
-              <input type="text" id="newEventNameInput" class="form-control font-bold" placeholder="e.g. Ideathon 2026, Startup Pitch, Hackathon" required>
-            </div>
-
-            <div class="form-group">
-              <label for="newApiUrlInput">Google Apps Script Web App URL for this Event</label>
-              <input type="url" id="newApiUrlInput" class="form-control font-mono" placeholder="https://script.google.com/macros/s/.../exec">
-              <small class="form-hint">Leave blank to use offline/demo mode until you deploy the sheet.</small>
-            </div>
-
-            <div class="participant-grid" style="gap: 12px; margin-top: 0;">
-              <div class="form-group">
-                <label for="newPrefixInput">Ticket Prefix</label>
-                <input type="text" id="newPrefixInput" class="form-control font-mono" placeholder="e.g. ID26-, HACK-">
+        <div class="operations-grid">
+          <!-- Arena Scanner Station -->
+          <div class="ops-col-scanner">
+            <div class="panel scanner-panel">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <span class="station-tag-indicator">ARENA SCANNER</span>
+                  <h3 class="panel-heading">Scan Participant Ticket</h3>
+                  <p class="panel-subhint">QR code or manual ID for arena attendance</p>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="newVolunteerPinInput">Volunteer Access PIN</label>
-                <input type="text" id="newVolunteerPinInput" class="form-control font-mono" placeholder="e.g. 3333" value="3333" maxlength="8">
+              <div class="arena-scanner-instructions">
+                <div class="inst-item">
+                  <i class="ph-bold ph-check-circle" style="color: var(--status-success);"></i>
+                  <span>Must be checked in at Main Gate first</span>
+                </div>
+                <div class="inst-item">
+                  <i class="ph-bold ph-check-circle" style="color: var(--status-success);"></i>
+                  <span>Must have selected this activity in their ₹119 package</span>
+                </div>
+                <div class="inst-item">
+                  <i class="ph-bold ph-warning-circle" style="color: var(--status-warning);"></i>
+                  <span>Duplicate round attendance will be blocked</span>
+                </div>
+              </div>
+              <div class="manual-entry-container" style="margin-top: 14px;">
+                <form id="arenaManualForm" class="manual-id-form">
+                  <div class="manual-input-wrapper">
+                    <span class="id-input-icon"><i class="ph-bold ph-hash"></i></span>
+                    <input 
+                      type="text" 
+                      id="arenaManualRegId" 
+                      class="manual-id-input font-mono"
+                      placeholder="Enter Registration ID for Arena" 
+                      autocomplete="off" 
+                      spellcheck="false"
+                      required
+                    >
+                    <button type="submit" class="btn-action-primary">
+                      <i class="ph-bold ph-check"></i>
+                      <span>MARK PRESENT</span>
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
+          </div>
 
-            <div class="form-group">
-              <label for="newArenasInput">Rounds / Activities / Arenas (comma-separated)</label>
-              <input type="text" id="newArenasInput" class="form-control" placeholder="e.g. Round 1: PPT, Round 2: Prototype, Grand Finale">
+          <!-- Arena Eligibility & Attendance Result -->
+          <div class="ops-col-result">
+            <div class="panel result-panel">
+              <div class="panel-header">
+                <h3 class="panel-heading">Attendance Record</h3>
+              </div>
+              <div id="arenaResultPlaceholder" class="arena-empty-state">
+                <i class="ph ph-user-focus" style="font-size: 2.5rem; color: var(--text-dim);"></i>
+                <h4>Ready for Participant</h4>
+                <p>Scan a ticket or enter Registration ID to verify round eligibility and mark PRESENT.</p>
+              </div>
+              <div id="arenaResultContent" style="display: none;">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- VIEW 3: REGISTRATION SEARCH (DEDICATED SEARCH SCREEN)                      -->
+      <!-- ========================================================================= -->
+      <section id="viewRegistrationSearch" class="ops-view-section" style="display: none;">
+        <div class="panel search-control-panel">
+          <div class="search-header-row">
+            <div>
+              <h2 class="panel-heading"><i class="ph-bold ph-magnifying-glass"></i> Participant Registration Search</h2>
+              <p class="panel-subhint">Lookup participant status, payment verification, package details, gate entry, and arena attendance</p>
+            </div>
+            <div class="search-stats-tag">
+              <span>Database Query</span>
+            </div>
+          </div>
+
+          <div class="search-input-box">
+            <i class="ph-bold ph-magnifying-glass search-icon"></i>
+            <input 
+              type="text" 
+              id="regSearchQuery" 
+              class="search-text-input font-mono"
+              placeholder="Search by Registration ID (e.g. TS26-0001), Full Name, or Roll Number..."
+              autocomplete="off"
+            >
+            <button id="btnExecuteSearch" class="btn-action-primary" type="button">
+              <span>Search</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="search-workspace-grid">
+          <!-- Search Results List -->
+          <div class="panel search-list-panel">
+            <div class="panel-header">
+              <h3 class="panel-heading">Search Results</h3>
+              <span id="searchResultCount" class="badge-count">0 found</span>
+            </div>
+            <div id="searchResultsList" class="search-results-container">
+              <div class="empty-search-hint">
+                <i class="ph ph-magnifying-glass" style="font-size: 2rem; color: var(--text-dim); margin-bottom: 8px;"></i>
+                <p>Type a Registration ID, student name, or roll number to search the event records.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Participant Comprehensive Profile Inspector -->
+          <div class="panel search-profile-panel">
+            <div class="panel-header">
+              <h3 class="panel-heading">Participant Record</h3>
+              <span class="badge-count" id="searchProfileStatus">READY</span>
             </div>
 
-            <button id="btnCreateNewEvent" class="btn btn-primary btn-block" type="button" style="margin-top: 8px;">
-              <span>➕ Create & Launch Event</span>
+            <div id="searchProfileCard" class="profile-inspector-content">
+              <div class="profile-empty-message">
+                <i class="ph ph-identification-card" style="font-size: 2.5rem; color: var(--text-dim); margin-bottom: 8px;"></i>
+                <h4>No Participant Selected</h4>
+                <p>Select a participant from search results or enter an ID to inspect complete verification details.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- VIEW 4: RECENT ACTIVITY / FULL LOG                                        -->
+      <!-- ========================================================================= -->
+      <section id="viewRecentActivity" class="ops-view-section" style="display: none;">
+        <div class="panel full-log-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-heading"><i class="ph-bold ph-clock-counter-clockwise"></i> Complete Operational Scan Log</h2>
+              <p class="panel-subhint">Full chronological audit log of all gate entries and round attendances recorded on this terminal</p>
+            </div>
+            <div class="live-feed-actions">
+              <input type="text" id="fullLogSearch" placeholder="Filter entire scan history..." class="live-feed-filter font-mono">
+              <button id="btnExportCsvFull" class="btn-ops-control" type="button">
+                <i class="ph ph-download-simple"></i> Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="ops-table" id="fullHistoryTable">
+              <thead>
+                <tr>
+                  <th>TIME</th>
+                  <th>OPERATOR</th>
+                  <th>STATION</th>
+                  <th>REG ID</th>
+                  <th>NAME</th>
+                  <th>ROLL NO</th>
+                  <th>SECTION</th>
+                  <th>ACTIVITIES</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="fullHistoryTableBody">
+                <tr class="empty-feed-row">
+                  <td colspan="9">No records available yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- VIEW 5: LIVE OVERVIEW                                                     -->
+      <!-- ========================================================================= -->
+      <section id="viewLiveOverview" class="ops-view-section" style="display: none;">
+        <div class="panel overview-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-heading"><i class="ph-bold ph-chart-bar"></i> Event Operational Overview</h2>
+              <p class="panel-subhint">Real event numbers reported from Google Sheets database</p>
+            </div>
+            <button id="btnRefreshOverview" class="btn-ops-control" type="button">
+              <i class="ph ph-arrows-clockwise"></i> Refresh Stats
             </button>
           </div>
 
-          <!-- TAB 3: MANAGE ALL EVENTS -->
-          <div id="tabManageEvents" class="tab-pane" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.84rem; font-weight: 700; color: var(--text-secondary);">All Configured Club Events:</span>
-              <button id="btnOpenAddNewTab" class="btn-sm" type="button">➕ New Event</button>
+          <div class="overview-cards-grid">
+            <div class="overview-stat-card">
+              <span class="stat-icon-wrap"><i class="ph-bold ph-users-three"></i></span>
+              <span class="stat-title">TOTAL REGISTERED</span>
+              <span class="stat-number font-mono" id="overviewTotal">0</span>
+              <span class="stat-footer-text">Verified student registrations</span>
             </div>
-            <div id="manageEventsList" style="display: flex; flex-direction: column; gap: 10px;">
-              <!-- Dynamic event items injected here -->
+
+            <div class="overview-stat-card card-green">
+              <span class="stat-icon-wrap"><i class="ph-bold ph-check-circle"></i></span>
+              <span class="stat-title">GATE CHECKED IN</span>
+              <span class="stat-number font-mono" id="overviewCheckedIn">0</span>
+              <span class="stat-footer-text">Participants currently inside venue</span>
+            </div>
+
+            <div class="overview-stat-card card-amber">
+              <span class="stat-icon-wrap"><i class="ph-bold ph-clock"></i></span>
+              <span class="stat-title">PENDING GATE ENTRY</span>
+              <span class="stat-number font-mono" id="overviewPending">0</span>
+              <span class="stat-footer-text">Registered participants yet to arrive</span>
+            </div>
+
+            <div class="overview-stat-card card-blue">
+              <span class="stat-icon-wrap"><i class="ph-bold ph-trophy"></i></span>
+              <span class="stat-title">ARENA ATTENDANCE</span>
+              <span class="stat-number font-mono" id="overviewArenas">4 Arenas</span>
+              <span class="stat-footer-text">CEO, Parody, Open Mic, Meme War</span>
             </div>
           </div>
 
-          <!-- TAB 4: SHEET SETUP GUIDE -->
-          <div id="tabGuide" class="tab-pane" style="display: none;">
-            <div class="modal-info-box" style="margin: 0;">
-              <h4 style="margin-bottom: 10px;">📋 How to Connect Any Google Sheet (2 Minutes):</h4>
-              <ol style="margin-left: 18px; line-height: 1.6; font-size: 0.84rem;">
-                <li><strong>Create Google Form:</strong> Create your registration form & open its linked Google Sheet.</li>
-                <li><strong>Open Script Editor:</strong> Inside the Google Sheet, click <code>Extensions</code> &gt; <code>Apps Script</code>.</li>
-                <li><strong>Paste Backend Code:</strong> Delete existing code, paste the contents of <code>GoogleAppsScript_Backend.gs</code> from this project, and click <strong>Save (💾)</strong>.</li>
-                <li><strong>Deploy as Web App:</strong> Click <strong>Deploy</strong> &gt; <strong>New deployment</strong> &gt; select type <strong>Web app</strong>:
-                  <ul style="margin-top: 4px; margin-bottom: 4px;">
-                    <li><em>Execute as:</em> <strong>Me</strong></li>
-                    <li><em>Who has access:</em> <strong>Anyone</strong> (critical for scanner API requests!)</li>
-                  </ul>
-                </li>
-                <li><strong>Copy Web App URL:</strong> Copy the URL ending in <code>/exec</code> and paste it into the <strong>Google Sheet Web App URL</strong> field in Tab 2 or Tab 1.</li>
-              </ol>
+          <div class="overview-rules-card">
+            <h4 class="rules-heading"><i class="ph-bold ph-info"></i> Techno Splurge 2026 Event Policy Rules</h4>
+            <div class="rules-grid">
+              <div class="rule-box">
+                <strong>Package Requirement</strong>
+                <p>Every participant must select exactly 3 out of 4 activities for ₹119. Single or 2-activity passes are invalid.</p>
+              </div>
+              <div class="rule-box">
+                <strong>Gate Sequence</strong>
+                <p>Participants must check in at the Main Gate before any activity arena operator can mark them present.</p>
+              </div>
+              <div class="rule-box">
+                <strong>Duplicate Prevention</strong>
+                <p>Each Registration ID can only enter the gate once, and can only be marked present once per registered arena.</p>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- MODALS & OPERATIONAL OVERLAYS                                             -->
+    <!-- ========================================================================= -->
+
+    <!-- SYSTEM HEALTH & STATUS MODAL -->
+    <div id="systemStatusModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box status-modal-box">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <i class="ph-bold ph-cpu modal-title-icon"></i>
+            <div>
+              <h3 class="modal-title">System Status & Connectivity</h3>
+              <p class="modal-subtitle">Real-time status of local hardware & remote Google Sheets API</p>
+            </div>
+          </div>
+          <button id="btnCloseSystemStatus" class="btn-close-modal" type="button">&times;</button>
+        </div>
+
+        <div class="status-items-list">
+          <div class="status-item">
+            <div class="status-item-left">
+              <span class="status-bullet bullet-green"></span>
+              <div>
+                <strong>Application Shell</strong>
+                <p class="status-item-sub">Antigravity Operations Controller 2026</p>
+              </div>
+            </div>
+            <span class="status-badge-ok">ACTIVE</span>
+          </div>
+
+          <div class="status-item">
+            <div class="status-item-left">
+              <span class="status-bullet" id="scannerStatusBullet"></span>
+              <div>
+                <strong>Scanner Hardware</strong>
+                <p class="status-item-sub" id="scannerStatusDesc">HTML5 Camera Stream Ready</p>
+              </div>
+            </div>
+            <span class="status-badge-ok" id="scannerStatusBadge">READY</span>
+          </div>
+
+          <div class="status-item">
+            <div class="status-item-left">
+              <span class="status-bullet" id="backendStatusBullet"></span>
+              <div>
+                <strong>Google Sheets API</strong>
+                <p class="status-item-sub" id="backendStatusDesc">Connected to Google Apps Script Web App</p>
+              </div>
+            </div>
+            <span class="status-badge-ok" id="backendStatusBadge">CONNECTED</span>
+          </div>
+
+          <div class="status-item">
+            <div class="status-item-left">
+              <i class="ph ph-clock" style="font-size: 1.2rem; color: var(--text-muted); margin-right: 8px;"></i>
+              <div>
+                <strong>Last Successful Sync</strong>
+                <p class="status-item-sub font-mono" id="statusSyncTimestamp">19:43:12</p>
+              </div>
+            </div>
+            <button id="btnPingBackend" class="btn-ops-control" type="button">Test Ping</button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btnCloseSystemStatusFooter" class="btn-action-primary" type="button">Close</button>
         </div>
       </div>
     </div>
 
-    <!-- Coordinator Authentication Portal Modal -->
-    <div id="coordinatorLoginModal" class="modal-overlay" style="display: none;">
-      <div class="modal-card coord-login-card" style="position: relative;">
-        <button id="btnCloseCoordModal" class="icon-btn close-login-btn" type="button" title="Close / Go Back" aria-label="Close">&times;</button>
-        <div class="login-header-block">
-          <div class="brand-badge" style="align-self: center; margin-bottom: 8px;">SECURITY CHECKPOINT</div>
-          <h2 class="login-title">Coordinator Login Portal</h2>
-          <p class="login-desc">Select your coordinator identity to operate the scanner and stamp verified check-ins.</p>
+    <!-- COORDINATOR / OPERATOR AUTHENTICATION MODAL -->
+    <div id="coordinatorLoginModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box coord-login-card">
+        <button id="btnCloseCoordModal" class="btn-close-modal" type="button" title="Close" aria-label="Close">&times;</button>
+        
+        <div class="modal-header-centered">
+          <span class="security-tag"><i class="ph-bold ph-shield-check"></i> SECURITY CHECKPOINT</span>
+          <h2 class="login-title">Operator Login Portal</h2>
+          <p class="login-desc">Select your operator identity to stamp verified check-ins at this station.</p>
         </div>
 
         <div class="coord-selection-grid" id="coordSelectionGrid">
-          <div class="coord-card active" data-id="vishnu" data-name="Vishnu" data-role="Lead Coordinator">
-            <div class="coord-avatar-large">V</div>
-            <div class="coord-details">
-              <strong>Vishnu</strong>
-              <span class="coord-role-text">Lead Coordinator</span>
-            </div>
-            <span class="coord-pill-tag tag-lead">Super Admin</span>
-          </div>
-
-          <div class="coord-card" data-id="nikhil" data-name="Sai Nikhil" data-role="Arena & Gate Lead">
+          <div class="coord-card active" data-id="nikhil" data-name="Sai Nikhil" data-role="Arena & Gate Lead">
             <div class="coord-avatar-large avatar-nikhil">N</div>
             <div class="coord-details">
               <strong>Sai Nikhil</strong>
@@ -548,95 +791,253 @@
             <span class="coord-pill-tag tag-ops">Operations Lead</span>
           </div>
 
+          <div class="coord-card" data-id="vishnu" data-name="Vishnu" data-role="Lead Coordinator">
+            <div class="coord-avatar-large">V</div>
+            <div class="coord-details">
+              <strong>Vishnu</strong>
+              <span class="coord-role-text">Lead Coordinator</span>
+            </div>
+            <span class="coord-pill-tag tag-lead">Super Admin</span>
+          </div>
 
           <div class="coord-card" data-id="volunteer_techno" data-name="IIC Club Staff" data-role="Event Staff">
-            <div class="coord-avatar-large avatar-volunteer" style="background: linear-gradient(135deg, #0284c7, #0ea5e9);">⚡</div>
-            <div class="coord-details">
-              <strong>Volunteer: IIC Club</strong>
-              <span class="coord-role-text">Event Staff (IIC Club Only)</span>
+            <div class="coord-avatar-large avatar-volunteer">
+              <i class="ph-bold ph-lightning"></i>
             </div>
-            <span class="coord-pill-tag tag-ops">Staff Access</span>
+            <div class="coord-details">
+              <strong>Volunteer Staff</strong>
+              <span class="coord-role-text">Event Staff (Techno Splurge)</span>
+            </div>
+            <span class="coord-pill-tag tag-ops">Gate Volunteer</span>
           </div>
         </div>
 
         <form id="coordinatorLoginForm" class="login-form">
           <div class="form-group">
-            <label for="coordPinInput">Security PIN / Access Key</label>
+            <label for="coordPinInput" class="form-label"><i class="ph-bold ph-lock-key"></i> Security PIN / Access Key</label>
             <div class="input-with-btn">
               <input 
                 type="password" 
                 id="coordPinInput" 
                 class="form-control font-mono" 
-                placeholder="Enter Access PIN" 
+                placeholder="Enter Access PIN (Default: 2402)" 
                 maxlength="10"
                 autocomplete="current-password"
                 required
               >
-              <button type="submit" class="btn btn-primary" id="btnLoginSubmit">
-                <span>Enter Dashboard</span>
-                <span>➔</span>
+              <button type="submit" class="btn-action-primary" id="btnLoginSubmit">
+                <span>Enter Station</span>
+                <i class="ph-bold ph-arrow-right"></i>
               </button>
             </div>
-            <small id="coordPinHint" style="color: var(--text-muted); font-size: 0.76rem;">Enter the security PIN provided by the event organizers.</small>
+            <small id="coordPinHint" class="form-hint">Authorized operators only. PINs are issued by the Operations Lead.</small>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Volunteer Link Dispatch & Quick QR Modal -->
-    <div id="shareVolunteerModal" class="modal-overlay" style="display: none;">
-      <div class="modal-card" style="max-width: 520px;">
+    <!-- VOLUNTEER MAGIC LINK & DISPATCH MODAL -->
+    <div id="shareVolunteerModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box dispatch-modal-box">
         <div class="modal-header">
-          <div>
-            <h3 style="margin-bottom: 2px;">📱 Share with Event Volunteers</h3>
-            <small style="color: var(--text-muted); font-size: 0.78rem;">Generate pre-configured instant scanner links for any desk</small>
+          <div class="modal-title-wrap">
+            <i class="ph-bold ph-share-network modal-title-icon"></i>
+            <div>
+              <h3 class="modal-title">Dispatch Scanner Link to Volunteers</h3>
+              <p class="modal-subtitle">Generate pre-configured instant scanner links for physical venue desks</p>
+            </div>
           </div>
-          <button id="btnCloseShareModal" class="icon-btn" type="button">&times;</button>
+          <button id="btnCloseShareModal" class="btn-close-modal" type="button">&times;</button>
         </div>
 
         <div class="modal-body">
-          <!-- Event & Role Selector -->
-          <div class="participant-grid" style="gap: 12px; margin-top: 0;">
-            <div class="form-group">
-              <label for="shareEventSelect">Target Event</label>
+          <div class="dispatch-config-row">
+            <div class="form-group flex-1">
+              <label for="shareEventSelect" class="form-label">Target Event</label>
               <select id="shareEventSelect" class="form-select font-bold">
-                <option value="techno_splurge">IIC Club (Techno Splurge)</option>
+                <option value="techno_splurge">IIC Club (Techno Splurge 2026)</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="shareDeskSelect">Assigned Desk / Mode</label>
+            <div class="form-group flex-1">
+              <label for="shareDeskSelect" class="form-label">Assigned Station Desk</label>
               <select id="shareDeskSelect" class="form-select font-bold">
-                <option value="gate">Main Gate Scanner</option>
+                <option value="gate">🚪 Main Gate Scanner</option>
               </select>
             </div>
           </div>
 
-          <!-- Quick QR Code Preview -->
-          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-card-subtle); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin: 6px 0;">
-            <p style="font-size: 0.78rem; font-weight: 700; color: var(--emerald-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-              Volunteer can scan this QR code with phone camera to launch:
-            </p>
-            <img id="volunteerQrImage" src="" alt="Volunteer Scanner QR Code" style="width: 180px; height: 180px; border-radius: 12px; border: 3px solid #ffffff; box-shadow: var(--shadow-card); background: #ffffff;">
-            <p id="shareLinkPreview" class="font-mono" style="font-size: 0.74rem; color: var(--text-muted); word-break: break-all; margin-top: 10px; text-align: center; max-width: 95%;"></p>
+          <div class="qr-preview-card">
+            <p class="qr-preview-tag">Volunteer can scan this QR code with camera to launch scanner:</p>
+            <img id="volunteerQrImage" src="" alt="Volunteer Scanner QR Code" class="dispatch-qr-img">
+            <p id="shareLinkPreview" class="dispatch-link-text font-mono"></p>
           </div>
 
-          <!-- Copy and WhatsApp Share Buttons -->
-          <div style="display: flex; gap: 10px; margin-top: 6px;">
-            <button id="btnCopyVolunteerLink" class="btn btn-primary" type="button" style="flex: 1;">
-              📋 Copy Link
+          <div class="dispatch-button-row">
+            <button id="btnCopyVolunteerLink" class="btn-action-primary flex-1" type="button">
+              <i class="ph-bold ph-clipboard-text"></i> Copy Link
             </button>
-            <button id="btnWhatsappShare" class="btn btn-secondary" type="button" style="flex: 1; background: #25D366; color: #ffffff; border-color: #25D366; font-weight: 700;">
-              💬 Share via WhatsApp
+            <button id="btnWhatsappShare" class="btn-action-whatsapp flex-1" type="button">
+              <i class="ph-bold ph-whatsapp-logo"></i> Send via WhatsApp
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENT & SHEETS SETTINGS MODAL -->
+    <div id="settingsModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box settings-modal-box">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <i class="ph-bold ph-sliders-horizontal modal-title-icon"></i>
+            <div>
+              <h3 class="modal-title">Event Operations Configuration</h3>
+              <p class="modal-subtitle">Google Apps Script Web App URL & Event Parameters</p>
+            </div>
+          </div>
+          <button id="btnCloseSettings" class="btn-close-modal" type="button">&times;</button>
+        </div>
+
+        <!-- Modal Tabs -->
+        <nav class="settings-modal-tabs" aria-label="Settings Tabs">
+          <button type="button" class="settings-tab-btn active" data-tab="tabActiveEvent"><i class="ph ph-gear-six"></i> Active Event</button>
+          <button type="button" class="settings-tab-btn" data-tab="tabAddEvent"><i class="ph ph-plus-circle"></i> Add Event</button>
+          <button type="button" class="settings-tab-btn" data-tab="tabManageEvents"><i class="ph ph-list-bullets"></i> All Events (<span id="tabEventsCount">1</span>)</button>
+          <button type="button" class="settings-tab-btn" data-tab="tabGuide"><i class="ph ph-book-open"></i> Sheet Setup</button>
+        </nav>
+
+        <div class="modal-body">
+          <!-- TAB 1: ACTIVE EVENT CONFIG -->
+          <div id="tabActiveEvent" class="tab-pane">
+            <div class="form-group current-event-card">
+              <div class="current-event-strip">
+                <span class="club-badge-tag" id="settingsActiveClubTag">IIC CLUB</span>
+                <span class="active-pill">ACTIVE EVENT</span>
+              </div>
+              <h4 id="settingsActiveEventName" class="settings-event-name">Techno Splurge</h4>
+              <label for="apiUrlInput" class="form-label">Google Apps Script Web App URL:</label>
+              <input 
+                type="url" 
+                id="apiUrlInput" 
+                placeholder="https://script.google.com/macros/s/.../exec"
+                class="form-control font-mono"
+              >
+              <small class="form-hint">
+                Responses, check-ins, and activity attendance sync directly with this Apps Script backend.
+              </small>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group flex-1">
+                <label for="eventPrefixInput" class="form-label">Ticket ID Prefix</label>
+                <input type="text" id="eventPrefixInput" class="form-control font-mono" placeholder="TS26-">
+              </div>
+              <div class="form-group flex-1">
+                <label for="eventVolunteerPinInput" class="form-label">Volunteer Access PIN</label>
+                <input type="text" id="eventVolunteerPinInput" class="form-control font-mono" placeholder="2222" maxlength="8">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="eventSubtitleInput" class="form-label">Event Tagline / Subtitle</label>
+              <input type="text" id="eventSubtitleInput" class="form-control" placeholder="GATE ENTRY & ARENA ATTENDANCE SCANNER">
+            </div>
+
+            <div class="form-group">
+              <label for="eventArenasInput" class="form-label">Activities / Arenas (comma-separated)</label>
+              <input type="text" id="eventArenasInput" class="form-control" placeholder="CEO for 10 Minutes, Tech Parody, Open Mic, Meme War">
+            </div>
+
+            <div class="form-checkbox-row">
+              <label class="switch-control">
+                <input type="checkbox" id="audioToggle" checked>
+                <span><i class="ph ph-speaker-high"></i> Acoustic Audio Feedback (Chimes / Buzzers)</span>
+              </label>
+            </div>
+
+            <div class="form-checkbox-row">
+              <label class="switch-control">
+                <input type="checkbox" id="autoResumeToggle" checked>
+                <span><i class="ph ph-camera"></i> Auto-resume camera 3.5s after successful verification</span>
+              </label>
+            </div>
+
+            <div class="modal-action-row">
+              <button id="btnTestConnection" class="btn-ops-secondary flex-1" type="button">
+                <i class="ph ph-plugs-connected"></i> Test Connection
+              </button>
+              <button id="btnSaveSettings" class="btn-action-primary flex-1" type="button">
+                <i class="ph ph-floppy-disk"></i> Save Configuration
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB 2: ADD NEW EVENT -->
+          <div id="tabAddEvent" class="tab-pane" style="display: none;">
+            <div class="form-group">
+              <label for="newClubSelect" class="form-label">Parent Club / Organization</label>
+              <select id="newClubSelect" class="form-select font-bold">
+                <option value="IIC Club">IIC Club</option>
+                <option value="__new__">➕ Add New Club / Organization...</option>
+              </select>
+              <input type="text" id="newClubCustomInput" class="form-control" placeholder="Enter New Club Name (e.g. IEEE, ACM)" style="display: none; margin-top: 6px;">
+            </div>
+
+            <div class="form-group">
+              <label for="newEventNameInput" class="form-label">Event Name *</label>
+              <input type="text" id="newEventNameInput" class="form-control font-bold" placeholder="e.g. Ideathon 2026" required>
+            </div>
+
+            <div class="form-group">
+              <label for="newApiUrlInput" class="form-label">Google Apps Script Web App URL</label>
+              <input type="url" id="newApiUrlInput" class="form-control font-mono" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group flex-1">
+                <label for="newPrefixInput" class="form-label">Ticket Prefix</label>
+                <input type="text" id="newPrefixInput" class="form-control font-mono" placeholder="e.g. ID26-">
+              </div>
+              <div class="form-group flex-1">
+                <label for="newVolunteerPinInput" class="form-label">Volunteer Access PIN</label>
+                <input type="text" id="newVolunteerPinInput" class="form-control font-mono" placeholder="3333" value="3333" maxlength="8">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newArenasInput" class="form-label">Rounds / Activities / Arenas</label>
+              <input type="text" id="newArenasInput" class="form-control" placeholder="e.g. Round 1, Round 2, Finals">
+            </div>
+
+            <button id="btnCreateNewEvent" class="btn-action-primary btn-block" type="button">
+              <i class="ph ph-plus-circle"></i> Create & Launch Event
             </button>
           </div>
 
-          <div class="modal-info-box" style="margin-top: 8px;">
-            <h4>⚡ Zero-Install Volunteer Setup:</h4>
-            <ol>
-              <li>Volunteers open the link directly on their phone browser (Safari or Chrome).</li>
-              <li>No manual configuration needed: the link auto-assigns the selected event and desk.</li>
-              <li>Tip: Tap <strong>"Add to Home Screen"</strong> for a native full-screen scanner app!</li>
-            </ol>
+          <!-- TAB 3: MANAGE EVENTS -->
+          <div id="tabManageEvents" class="tab-pane" style="display: none;">
+            <div class="tab-header-row">
+              <span class="sub-heading">Configured Club Events</span>
+              <button id="btnOpenAddNewTab" class="btn-ops-control" type="button"><i class="ph ph-plus"></i> New Event</button>
+            </div>
+            <div id="manageEventsList" class="manage-events-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- TAB 4: SETUP GUIDE -->
+          <div id="tabGuide" class="tab-pane" style="display: none;">
+            <div class="guide-box">
+              <h4><i class="ph-bold ph-book-open"></i> How to Connect Google Sheets (2 Minutes):</h4>
+              <ol>
+                <li>Open your Google Sheet with registration responses.</li>
+                <li>Go to <code>Extensions</code> &gt; <code>Apps Script</code>.</li>
+                <li>Paste the contents of <code>GoogleAppsScript_Backend.gs</code> and click Save (💾).</li>
+                <li>Click <strong>Deploy</strong> &gt; <strong>New deployment</strong> &gt; Select type <strong>Web app</strong>.</li>
+                <li>Set <em>Execute as:</em> <strong>Me</strong> and <em>Who has access:</em> <strong>Anyone</strong>.</li>
+                <li>Copy the Web App URL (ending in <code>/exec</code>) and paste it in the field above.</li>
+              </ol>
+            </div>
           </div>
         </div>
       </div>
@@ -645,5 +1046,6 @@
   </div>
 
   <script src="app.js"></script>
+  <script src="gsap-init.js"></script>
 </body>
 </html>
