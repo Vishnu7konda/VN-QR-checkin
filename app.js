@@ -993,10 +993,12 @@ function switchEvent(eventId) {
   }
 
   // Update activity dropdown
-  if (elements.activeArenaSelect && ev.arenas) {
-    elements.activeArenaSelect.innerHTML = ev.arenas.map((a, i) => 
+  if (ev.arenas) {
+    const arenaOptions = ev.arenas.map((a, i) => 
       `<option value="${escapeHtml(a)}">${i + 1}. ${escapeHtml(a)}</option>`
     ).join("");
+    if (elements.activeArenaSelect) elements.activeArenaSelect.innerHTML = arenaOptions;
+    if (elements.arenaViewSelect) elements.arenaViewSelect.innerHTML = arenaOptions;
     state.activeArena = ev.arenas[0] || "Round 1";
   }
 
@@ -1033,14 +1035,22 @@ function switchMode(mode) {
     elements.scannerTitle.textContent = `${ev.name}: Gate Scanner`;
     elements.scannerHint.textContent = `Point camera directly at the participant ticket QR code (${ev.prefix}...)`;
     elements.statCheckedLabel.textContent = "Gate Checked In";
+    if (elements.currentStationText) elements.currentStationText.textContent = "MAIN GATE";
+    if (elements.arenaAttendanceBlock) elements.arenaAttendanceBlock.style.display = "none";
   } else {
     elements.modeGateBtn.classList.remove("active");
     elements.modeArenaBtn.classList.add("active");
     elements.arenaDropdownWrap.style.display = "flex";
-    state.activeArena = elements.activeArenaSelect.value;
+    if (elements.activeArenaSelect && elements.activeArenaSelect.value) {
+      state.activeArena = elements.activeArenaSelect.value;
+    }
     elements.scannerTitle.textContent = `${state.activeArena} Attendance`;
     elements.scannerHint.textContent = `Verifying participant registration & marking PRESENT`;
     elements.statCheckedLabel.textContent = "Round Attendees";
+    if (elements.currentStationText) elements.currentStationText.textContent = state.activeArena ? state.activeArena.toUpperCase() : "ARENA";
+    if (elements.arenaViewTitle) elements.arenaViewTitle.textContent = state.activeArena || "Arena Attendance";
+    if (elements.arenaViewSelect && state.activeArena) elements.arenaViewSelect.value = state.activeArena;
+    if (elements.arenaAttendanceBlock) elements.arenaAttendanceBlock.style.display = "flex";
   }
   updateStats();
   resetToIdle();
@@ -1049,6 +1059,10 @@ function switchMode(mode) {
 function updateModeUI() {
   if (state.currentMode === "arena") {
     elements.scannerTitle.textContent = "Arena Attendance: " + state.activeArena;
+    if (elements.currentStationText) elements.currentStationText.textContent = state.activeArena ? state.activeArena.toUpperCase() : "ARENA";
+    if (elements.arenaViewTitle) elements.arenaViewTitle.textContent = state.activeArena || "Arena Attendance";
+    if (elements.arenaViewSelect && state.activeArena) elements.arenaViewSelect.value = state.activeArena;
+    if (elements.activeArenaSelect && state.activeArena) elements.activeArenaSelect.value = state.activeArena;
     updateStats();
   }
 }
@@ -2756,4 +2770,406 @@ function shareWhatsapp() {
     `⚡ *VN QR Check-in System*`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, "_blank");
+}
+
+// ==============================================================================
+// Operational Views, Search & Diagnostics Suite
+// ==============================================================================
+let searchDebounceTimer = null;
+
+function switchView(viewName) {
+  const tabs = [
+    { name: "gate", tab: elements.tabGate, view: elements.viewGateCheckIn },
+    { name: "arena", tab: elements.tabArena, view: elements.viewArenaAttendance },
+    { name: "search", tab: elements.tabSearch, view: elements.viewRegistrationSearch },
+    { name: "history", tab: elements.tabHistory, view: elements.viewRecentActivity },
+    { name: "overview", tab: elements.tabOverview, view: elements.viewLiveOverview }
+  ];
+
+  tabs.forEach(item => {
+    if (item.tab) {
+      if (item.name === viewName) {
+        item.tab.classList.add("active");
+      } else {
+        item.tab.classList.remove("active");
+      }
+    }
+    if (item.view) {
+      if (item.name === viewName) {
+        item.view.classList.add("active");
+        item.view.style.display = "flex";
+      } else {
+        item.view.classList.remove("active");
+        item.view.style.display = "none";
+      }
+    }
+  });
+
+  if (viewName === "gate") {
+    switchMode("gate");
+    if (elements.manualRegId) elements.manualRegId.focus();
+  } else if (viewName === "arena") {
+    switchMode("arena");
+    if (elements.arenaManualRegId) elements.arenaManualRegId.focus();
+  } else if (viewName === "search") {
+    if (elements.regSearchQuery) {
+      elements.regSearchQuery.focus();
+      executeRegistrationSearch(elements.regSearchQuery.value || "");
+    }
+  } else if (viewName === "history") {
+    renderFullHistory(elements.fullLogSearch ? elements.fullLogSearch.value : "");
+  } else if (viewName === "overview") {
+    updateOverviewStats();
+  }
+}
+
+async function executeRegistrationSearch(query) {
+  query = (query || "").trim().toLowerCase();
+  if (!elements.searchResultsList) return;
+
+  if (elements.searchProfileStatus) elements.searchProfileStatus.textContent = "SEARCHING...";
+
+  let matches = [];
+
+  if (state.apiUrl && state.apiUrl.startsWith("http")) {
+    try {
+      const endpoint = new URL(state.apiUrl);
+      endpoint.searchParams.set("action", "search");
+      endpoint.searchParams.set("query", query);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(endpoint.toString(), { signal: controller.signal });
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.results)) {
+        matches = data.results;
+      }
+    } catch (e) {
+      console.warn("Backend search failed, falling back to local database:", e);
+    }
+  }
+
+  // If no backend results or in demo mode, search in-memory database
+  if (!matches.length) {
+    const records = Object.values(state.demoDatabase || {});
+    if (!query) {
+      matches = records.slice(0, 15);
+    } else {
+      matches = records.filter(r => {
+        const id = (r.registrationId || r.regId || "").toLowerCase();
+        const name = (r.name || "").toLowerCase();
+        const roll = (r.roll || r.rollNo || "").toLowerCase();
+        const phone = (r.phone || "").toLowerCase();
+        return id.includes(query) || name.includes(query) || roll.includes(query) || phone.includes(query);
+      });
+    }
+  }
+
+  if (elements.searchResultCount) {
+    elements.searchResultCount.textContent = `${matches.length} Records`;
+  }
+  if (elements.searchProfileStatus) {
+    elements.searchProfileStatus.textContent = matches.length ? "READY" : "NO MATCHES";
+  }
+
+  if (!matches.length) {
+    elements.searchResultsList.innerHTML = `
+      <div class="empty-search-hint">
+        <i class="ph ph-magnifying-glass" style="font-size: 2rem; margin-bottom: 8px; opacity: 0.5;"></i>
+        <p>No participant records found for "${escapeHtml(query)}".</p>
+        <span style="font-size: 0.72rem; color: var(--text-dim);">Check for typos in Roll Number or Registration ID.</span>
+      </div>
+    `;
+    return;
+  }
+
+  elements.searchResultsList.innerHTML = matches.map((m, idx) => {
+    const regId = m.registrationId || m.regId || "—";
+    const name = m.name || "Participant";
+    const roll = m.roll || m.rollNo || "—";
+    const isPaid = (m.paymentStatus || "").toUpperCase() === "VERIFIED";
+    const isChecked = m.entryStatus === "CHECKED IN";
+
+    return `
+      <div class="search-result-card ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+          <span class="font-mono font-bold" style="color: var(--text-pure); font-size: 0.88rem;">${escapeHtml(regId)}</span>
+          <span class="status-tag ${isPaid ? 'tag-success' : 'tag-error'}">${isPaid ? 'PAID' : 'UNPAID'}</span>
+        </div>
+        <div style="font-size: 0.86rem; font-weight: 700; color: var(--text-pure);">${escapeHtml(name)}</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">
+          <span>${escapeHtml(roll)}</span>
+          <span style="color: ${isChecked ? 'var(--status-success-text)' : 'var(--text-dim)'}; font-weight: 700;">
+            ${isChecked ? '✓ Gate In' : '○ Not Checked In'}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  elements.searchResultsList.querySelectorAll(".search-result-card").forEach(card => {
+    card.addEventListener("click", () => {
+      elements.searchResultsList.querySelectorAll(".search-result-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      const idx = parseInt(card.dataset.idx, 10);
+      renderSearchProfile(matches[idx]);
+    });
+  });
+
+  renderSearchProfile(matches[0]);
+}
+
+function renderSearchProfile(p) {
+  if (!elements.searchProfileCard || !p) return;
+
+  const regId = p.registrationId || p.regId || "—";
+  const name = p.name || "Participant";
+  const rollNo = p.roll || p.rollNo || "—";
+  const email = p.email || "—";
+  const phone = p.phone || "—";
+  const yearSec = `${p.year || "Year"} • ${p.section || "Section"}`;
+  const paymentStatus = p.paymentStatus || "NOT VERIFIED";
+  const isPaid = paymentStatus.toUpperCase() === "VERIFIED";
+  const isChecked = p.entryStatus === "CHECKED IN";
+
+  let arenasList = [];
+  if (Array.isArray(p.arenas) && p.arenas.length) {
+    arenasList = p.arenas;
+  } else if (p.activities) {
+    arenasList = String(p.activities).split(",").map(s => s.replace(/^[^\w]+/u, "").trim()).filter(Boolean);
+  } else {
+    arenasList = [p.arena1, p.arena2, p.arena3].filter(Boolean);
+  }
+
+  elements.searchProfileCard.innerHTML = `
+    <div class="profile-top-strip">
+      <div class="profile-reg-block">
+        <span class="strip-label">REGISTRATION ID</span>
+        <div class="profile-reg-id font-mono font-bold">${escapeHtml(regId)}</div>
+      </div>
+      <div class="profile-payment-block">
+        <span class="strip-label">PAYMENT STATUS</span>
+        <div class="payment-badge-pill" style="background: ${isPaid ? 'var(--status-success-bg)' : 'var(--status-error-bg)'}; color: ${isPaid ? 'var(--status-success-text)' : 'var(--status-error-text)'}; border-color: ${isPaid ? 'var(--status-success-border)' : 'var(--status-error-border)'};">
+          ${isPaid ? 'PAYMENT VERIFIED' : 'PAYMENT UNVERIFIED'}
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-data-grid">
+      <div class="profile-field-full">
+        <span class="field-label">PARTICIPANT NAME</span>
+        <div class="field-val-name font-bold" style="color: var(--text-pure); font-size: 1.15rem;">${escapeHtml(name)}</div>
+      </div>
+      <div class="profile-field">
+        <span class="field-label">ROLL NUMBER</span>
+        <div class="field-val font-mono">${escapeHtml(rollNo)}</div>
+      </div>
+      <div class="profile-field">
+        <span class="field-label">YEAR & SECTION</span>
+        <div class="field-val">${escapeHtml(yearSec)}</div>
+      </div>
+      <div class="profile-field">
+        <span class="field-label">CONTACT EMAIL</span>
+        <div class="field-val" style="font-size: 0.78rem;">${escapeHtml(email)}</div>
+      </div>
+      <div class="profile-field">
+        <span class="field-label">PHONE NUMBER</span>
+        <div class="field-val font-mono" style="font-size: 0.78rem;">${escapeHtml(phone)}</div>
+      </div>
+    </div>
+
+    <div class="profile-activities-block">
+      <span class="activities-heading"><i class="ph-bold ph-trophy"></i> REGISTERED ARENAS (${arenasList.length})</span>
+      <div class="activities-chips-grid">
+        ${arenasList.map((a, i) => `
+          <div class="activity-chip">
+            <span class="chip-num">${i + 1}</span>
+            <span class="chip-name">${escapeHtml(a)}</span>
+          </div>
+        `).join("") || '<span style="color: var(--text-muted); font-size: 0.8rem;">No arenas registered</span>'}
+      </div>
+    </div>
+
+    <div class="profile-meta-strip" style="margin-top: 14px;">
+      <div class="meta-col">
+        <span class="meta-tag-label">GATE ENTRY STATUS</span>
+        <span class="meta-tag-val font-bold" style="color: ${isChecked ? 'var(--status-success-text)' : 'var(--status-warning-text)'};">
+          ${isChecked ? 'CHECKED IN' : 'NOT CHECKED IN'}
+        </span>
+      </div>
+      <div class="meta-col">
+        <span class="meta-tag-label">ENTRY TIMESTAMP</span>
+        <span class="meta-tag-val font-mono">${escapeHtml(p.entryTime || '—')}</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 16px;">
+      ${!isChecked ? `
+        <button class="btn-action-next" id="btnDirectCheckIn" style="background: var(--status-success);" type="button">
+          <i class="ph-bold ph-check"></i> <span>CHECK IN PARTICIPANT</span>
+        </button>
+      ` : `
+        <button class="btn-action-next" id="btnDirectCheckIn" style="background: var(--bg-panel-elevated); color: var(--text-muted); border: 1px solid var(--border-medium); cursor: default;" type="button" disabled>
+          <i class="ph-bold ph-check-circle"></i> <span>ALREADY CHECKED IN</span>
+        </button>
+      `}
+    </div>
+  `;
+
+  const btnDirect = document.getElementById("btnDirectCheckIn");
+  if (btnDirect && !isChecked) {
+    btnDirect.addEventListener("click", () => {
+      switchView("gate");
+      handleRegistrationCode(regId);
+    });
+  }
+}
+
+function openSystemStatusModal() {
+  if (elements.systemStatusModal) {
+    const nowTime = new Date().toLocaleTimeString();
+    if (elements.statusSyncTimestamp) elements.statusSyncTimestamp.textContent = nowTime;
+
+    if (elements.scannerStatusBullet && elements.scannerStatusBadge && elements.scannerStatusDesc) {
+      if (state.isScanning) {
+        elements.scannerStatusBullet.className = "status-bullet status-bullet-green";
+        elements.scannerStatusBadge.textContent = "ACTIVE";
+        elements.scannerStatusBadge.className = "status-badge-chip chip-green";
+        elements.scannerStatusDesc.textContent = "Camera feed live (60fps viewfinder)";
+      } else {
+        elements.scannerStatusBullet.className = "status-bullet status-bullet-amber";
+        elements.scannerStatusBadge.textContent = "PAUSED";
+        elements.scannerStatusBadge.className = "status-badge-chip chip-amber";
+        elements.scannerStatusDesc.textContent = "Scanner idle or camera paused by operator";
+      }
+    }
+
+    if (elements.backendStatusBullet && elements.backendStatusBadge && elements.backendStatusDesc) {
+      if (state.apiUrl && state.apiUrl.startsWith("http")) {
+        elements.backendStatusBullet.className = "status-bullet status-bullet-green";
+        elements.backendStatusBadge.textContent = "CONNECTED";
+        elements.backendStatusBadge.className = "status-badge-chip chip-green";
+        elements.backendStatusDesc.textContent = "Google Sheets Web App connected";
+      } else {
+        elements.backendStatusBullet.className = "status-bullet status-bullet-amber";
+        elements.backendStatusBadge.textContent = "DEMO MODE";
+        elements.backendStatusBadge.className = "status-badge-chip chip-amber";
+        elements.backendStatusDesc.textContent = "Operating on local database cache";
+      }
+    }
+
+    elements.systemStatusModal.style.display = "flex";
+  }
+}
+
+function closeSystemStatusModal() {
+  if (elements.systemStatusModal) {
+    elements.systemStatusModal.style.display = "none";
+  }
+}
+
+async function testPingBackend() {
+  if (!elements.btnPingBackend) return;
+  const originalText = elements.btnPingBackend.innerHTML;
+  elements.btnPingBackend.innerHTML = '<div class="ops-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;margin-right:6px;"></div> <span>PINGING...</span>';
+  elements.btnPingBackend.disabled = true;
+
+  if (!state.apiUrl || !state.apiUrl.startsWith("http")) {
+    setTimeout(() => {
+      alert("ℹ️ Currently in Demo Mode.\nAdd your Google Apps Script Web App URL in Settings (⚙️) to link your live Google Sheet.");
+      elements.btnPingBackend.innerHTML = originalText;
+      elements.btnPingBackend.disabled = false;
+    }, 400);
+    return;
+  }
+
+  const startMs = Date.now();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const res = await fetch(`${state.apiUrl}?action=ping`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    const roundtrip = Date.now() - startMs;
+    const data = await res.json();
+    if (data && data.success) {
+      alert(`✅ Connection Verified!\nLatency: ${roundtrip}ms\nBackend Service: Responsive & Healthy`);
+    } else {
+      alert(`⚠️ Received response (${roundtrip}ms):\n${JSON.stringify(data)}`);
+    }
+  } catch (err) {
+    clearTimeout(timeoutId);
+    alert(`❌ Ping Failed: ${err.message}\nPlease check internet connectivity or ensure Web App deployment has access set to 'Anyone'.`);
+  } finally {
+    elements.btnPingBackend.innerHTML = originalText;
+    elements.btnPingBackend.disabled = false;
+  }
+}
+
+function renderFullHistory(query) {
+  if (!elements.fullHistoryTableBody) return;
+  query = (query || "").trim().toLowerCase();
+
+  const filtered = state.history.filter(item => {
+    if (!query) return true;
+    return (
+      (item.regId || "").toLowerCase().includes(query) ||
+      (item.name || "").toLowerCase().includes(query) ||
+      (item.rollNo || "").toLowerCase().includes(query) ||
+      (item.mode || "").toLowerCase().includes(query) ||
+      (item.status || "").toLowerCase().includes(query)
+    );
+  });
+
+  if (!filtered.length) {
+    elements.fullHistoryTableBody.innerHTML = `
+      <tr class="empty-feed-row">
+        <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">
+          No activity records matching "${escapeHtml(query)}".
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  elements.fullHistoryTableBody.innerHTML = filtered.map(item => `
+    <tr>
+      <td class="font-mono" style="color: var(--text-muted); font-size: 0.78rem;">${escapeHtml(item.time)}</td>
+      <td style="font-weight: 700;">${escapeHtml(item.scannedBy || 'Sai Nikhil')}</td>
+      <td><span class="mode-badge ${item.mode === 'Gate Entry' ? 'mode-gate' : 'mode-arena'}">${escapeHtml(item.mode)}</span></td>
+      <td class="font-mono font-bold" style="color: var(--text-pure);">${escapeHtml(item.regId)}</td>
+      <td style="font-weight: 700;">${escapeHtml(item.name)}</td>
+      <td class="font-mono" style="font-size: 0.78rem;">${escapeHtml(item.rollNo)}</td>
+      <td style="font-size: 0.78rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.arenas || '—')}</td>
+      <td><span class="status-tag ${escapeHtml(item.statusClass || 'tag-success')}">${escapeHtml(item.status)}</span></td>
+    </tr>
+  `).join("");
+}
+
+function updateOverviewStats() {
+  const ev = state.events[state.activeEventId] || DEFAULT_EVENTS.techno_splurge;
+  const db = state.demoDatabase || {};
+  const records = Object.values(db);
+
+  const total = records.length || 0;
+  const checkedIn = records.filter(r => r.entryStatus === "CHECKED IN").length;
+  const pending = Math.max(0, total - checkedIn);
+  const arenasCount = (ev.arenas || []).length;
+
+  if (elements.overviewTotal) elements.overviewTotal.textContent = total;
+  if (elements.overviewCheckedIn) elements.overviewCheckedIn.textContent = checkedIn;
+  if (elements.overviewPending) elements.overviewPending.textContent = pending;
+  if (elements.overviewArenas) elements.overviewArenas.textContent = arenasCount;
+
+  if (elements.statTotal) elements.statTotal.textContent = total;
+  if (elements.statCheckedIn) elements.statCheckedIn.textContent = checkedIn;
+  if (elements.statPending) elements.statPending.textContent = pending;
+}
+
+function closeAllModals() {
+  if (elements.settingsModal) elements.settingsModal.style.display = "none";
+  if (elements.coordinatorLoginModal) elements.coordinatorLoginModal.style.display = "none";
+  if (elements.shareVolunteerModal) elements.shareVolunteerModal.style.display = "none";
+  if (elements.systemStatusModal) elements.systemStatusModal.style.display = "none";
 }

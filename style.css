@@ -537,9 +537,13 @@ body {
 }
 
 .ops-view-section {
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 12px;
+}
+
+.ops-view-section.active {
+  display: flex !important;
 }
 
 /* Base Panel */
